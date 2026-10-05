@@ -52,15 +52,13 @@
 
   * Cơ chế xác thực trước khi chạy.
 
-  * Tra cứu kịch bản mẫu từ tldr và cheat.sh.
-
   * Gợi ý lệnh mờ.
 
   * Tạo và quản lý bí danh.
 
   * Cơ chế xử lý hoàn toàn cục bộ.
 
-* **Nội dung nằm ngoài phạm vi phát triển (Kế thừa từ backlog):**
+* **Nội dung nằm ngoài phạm vi phát triển:**
 
   * Tự động chuyển hướng yêu cầu lên các mô hình điện toán đám mây trả phí.
 
@@ -87,13 +85,14 @@
 
 ### 3.2. Bảng phân tích so sánh chi tiết
 
-| Tiêu chí so sánh | Hỏi AI trên trình duyệt | GitHub Copilot CLI | Warp Terminal | Giải pháp ezcli đề xuất | 
+| Tiêu chí so sánh | Hỏi AI trên trình duyệt | Shell GPT (shell_gpt) | Warp Terminal | Giải pháp ezcli đề xuất | 
 | ----- | ----- | ----- | ----- | ----- | 
-| **Tính tích hợp** | Kém (phải chuyển qua lại giữa các cửa sổ) | Trung bình (sinh lệnh tách biệt, vẫn cần sao chép) | Tốt (tích hợp trong trình giả lập thiết bị đầu cuối) | Xuất sắc (chạy trực tiếp ngay tại phiên làm việc hiện tại) | 
-| **Chi phí vận hành** | Miễn phí hoặc gói thuê bao | Tốn phí dịch vụ hàng tháng | Phụ thuộc gói dịch vụ đám mây | Hoàn toàn miễn phí (tự lưu trữ cục bộ) | 
-| **Tốc độ phản hồi** | Chậm (độ trễ mạng cao) | Trung bình (1 - 2 giây) | Phụ thuộc máy chủ dịch vụ | Nhanh ($\le 1$ giây với mô hình nén cục bộ) | 
-| **Bảo mật dữ liệu** | Kém (dữ liệu gửi lên máy chủ bên thứ ba) | Kém (dữ liệu truyền qua đám mây) | Không hỗ trợ xử lý nội bộ hoàn toàn | Tuyệt đối (xử lý cục bộ, không rò rỉ dữ liệu ra ngoài) | 
-| **An toàn thực thi** | Không có cơ chế cảnh báo mức độ nguy hiểm | Chỉ hiển thị lệnh | Cảnh báo cơ bản | Phân tích cú pháp tĩnh và xác nhận trước khi chạy | 
+| **Tính tích hợp** | Kém (phải chuyển qua lại giữa các cửa sổ) | Tốt (có thể gọi lệnh `sgpt` trực tiếp ngay trong shell) | Tốt (tích hợp trong trình giả lập thiết bị đầu cuối) | Xuất sắc (chạy trực tiếp ngay tại phiên làm việc hiện tại) | 
+| **Chi phí vận hành** | Miễn phí hoặc gói thuê bao | Tiết kiệm / Miễn phí (hỗ trợ mô hình cục bộ / local model hoặc API cá nhân) | Phụ thuộc gói dịch vụ đám mây | Hoàn toàn miễn phí (tự lưu trữ cục bộ) | 
+| **Tốc độ phản hồi** | Chậm (độ trễ mạng cao) | Nhanh (khi chạy với mô hình cục bộ hoặc gọi API) | Phụ thuộc máy chủ dịch vụ | Nhanh ($\le 1$ giây với mô hình nén cục bộ) | 
+| **Bảo mật dữ liệu** | Kém (dữ liệu gửi lên máy chủ bên thứ ba) | Cao (hỗ trợ xử lý hoàn toàn cục bộ / local, không gửi dữ liệu ra ngoài) | Không hỗ trợ xử lý nội bộ hoàn toàn | Tuyệt đối (xử lý cục bộ, không rò rỉ dữ liệu ra ngoài) | 
+| **An toàn thực thi** | Không có cơ chế cảnh báo mức độ nguy hiểm | Khá (có cơ chế hỏi xác nhận trước khi chạy và hỗ trợ giải thích lệnh) | Cảnh báo cơ bản | Phân tích cú pháp tĩnh và xác nhận trước khi chạy | 
+| **Độ thân thiện (UX)** | Trung bình (giao diện web trực quan nhưng gây đứt gãy thao tác) | Thấp (người dùng phải cài đặt thủ công shell_gpt, phải nhớ các tham số và câu lệnh để sử dụng, chỉ là lệnh trong shell không phải giao diện thân thiện) | Cao (giao diện terminal đồ họa hiện đại, trực quan) | Cao (giao diện tương tác trực quan, gợi ý thông minh, thao tác tiện lợi mà không cần nhớ cú pháp) | 
 
 ### 3.3. Điểm khác biệt & Lợi thế cạnh tranh của giải pháp đề xuất
 
@@ -229,8 +228,6 @@
   * Đường truyền kết nối Internet ổn định.
 
 ## 5. KẾ HOẠCH PHÁT TRIỂN THEO MÔ HÌNH SCRUM
-
-Thay vì mô hình Thác nước (Waterfall) tuần tự tuyến tính khó đáp ứng khi yêu cầu thay đổi, nhóm áp dụng **Mô hình Agile/Scrum** nhằm chia nhỏ khối lượng công việc thành các Sprint có chu kỳ cố định, liên tục kiểm tra và bàn giao sản phẩm chạy được qua từng giai đoạn.
 
 ### 5.1. Thiết lập quy trình phát triển
 
