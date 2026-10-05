@@ -25,46 +25,48 @@
 
 ### 2.1. Bối cảnh & Phát biểu bài toán sơ lược
 
-* **Bối cảnh thực tế:** \[Mô tả hiện trạng thực tế của lĩnh vực/tổ chức/người dùng mà đề tài hướng tới giải quyết. Nêu rõ cách thức họ đang vận hành khi chưa có phần mềm này\].
+* **Bối cảnh thực tế:** Giao diện dòng lệnh (CLI) là công cụ làm việc thiết yếu nhưng số lượng câu lệnh quá lớn, cấu trúc tham số và các cờ tùy chọn phức tạp, không đồng nhất giữa các hệ điều hành.
 
-*  **Vấn đề tồn đọng:**
+* **Vấn đề tồn đọng:**
 
-  * *Vấn đề 1:* \[Mô tả khó khăn về thời gian, chi phí, hoặc sai sót dữ liệu\].
+  * *Vấn đề 1:* Người dùng thường xuyên phải rời khỏi cửa sổ dòng lệnh để tra cứu tài liệu hoặc hỏi AI trên trình duyệt web, gây gián đoạn mạch làm việc.
 
-  * *Vấn đề 2:* \[Mô tả sự thiếu hụt công cụ quản lý, giám sát hoặc tự động hóa\].
+  * *Vấn đề 2:* Việc thiết lập các công cụ hỗ trợ gợi ý lệnh thủ công đòi hỏi kỹ năng cấu hình phức tạp, dễ gây lỗi hệ thống.
 
-  * *Vấn đề 3:* \[Mô tả trải nghiệm chưa tốt của đối tượng người dùng cuối\].
-
-* **Mục tiêu dự án:** \[Nêu rõ mục tiêu cốt lõi mà phần mềm phải đạt được sau khi hoàn thành để giải quyết triệt để các vấn đề trên\].
+* **Mục tiêu dự án:** Xây dựng ứng dụng dòng lệnh ezcli tích hợp mô hình ngôn ngữ xử lý trực tiếp tại máy tính cá nhân, chuyển đổi yêu cầu ngôn ngữ tự nhiên thành câu lệnh chính xác, an toàn và tức thì.
 
 ### 2.2. Stakeholder
 
 | Mã đối tượng | Bên liên quan | Vai trò trong hệ thống | Nhu cầu chính & Kỳ vọng | Mức độ ảnh hưởng | 
 | ----- | ----- | ----- | ----- | ----- | 
-| `STK-01` | \[Ví dụ: Người dùng cuối / Khách hàng\] | \[Mô tả vai trò tương tác\] | \[Nhu cầu chính cần hệ thống đáp ứng\] | Rất cao | 
-| `STK-02` | \[Ví dụ: Nhân viên vận hành / Quản lý ca\] | \[Mô tả vai trò tương tác\] | \[Nhu cầu về tính chính xác, tốc độ xử lý\] | Cao | 
-| `STK-03` | \[Ví dụ: Nhân sự chuyên môn / Đối tác\] | \[Mô tả vai trò tương tác\] | \[Kỳ vọng vào công cụ hỗ trợ công việc\] | Cao | 
-| `STK-04` | \[Ví dụ: Quản trị viên hệ thống / Ban điều hành\] | \[Mô tả vai trò tương tác\] | \[Kỳ vọng vào báo cáo số liệu, an toàn dữ liệu\] | Trung bình | 
+| `STK-01` | Người dùng ít kinh nghiệm | Người dùng cuối | Chuyển đổi mô tả công việc thông thường thành lệnh CLI chính xác mà không cần nhớ cú pháp. | Rất cao | 
+| `STK-02` | Lập trình viên | Người dùng nâng cao | Tăng tốc độ thao tác, gợi ý cú pháp phức tạp, tìm kiếm mờ lịch sử lệnh và hỗ trợ quản lý bí danh. | Rất cao | 
+| `STK-03` | Giảng viên hướng dẫn | Khách hàng đánh giá | Nghiệm thu độ hoàn thiện đồ án, tính thực tiễn và tính chuẩn mực kỹ thuật trong tài liệu. | Cao | 
+| `STK-04` | Nhóm phát triển ezcli | Đội ngũ kỹ thuật | Làm chủ mã nguồn, tối ưu hóa mô hình cục bộ đạt tốc độ phản hồi cao và đảm bảo an toàn thực thi. | Trung bình | 
 
 ### 2.3. Phạm vi dự án
 
 * **Nội dung trong phạm vi phát triển:**
 
-  * \[Chức năng/Module chính 1 mà nhóm cam kết hiện thực hoàn chỉnh\].
+  * Sinh câu lệnh từ văn bản tự nhiên kèm giải thích tùy chọn.
 
-  * \[Chức năng/Module chính 2 mà nhóm cam kết hiện thực hoàn chỉnh\].
+  * Cơ chế xác thực trước khi chạy.
 
-  * \[Chức năng/Module chính 3 mà nhóm cam kết hiện thực hoàn chỉnh\].
+  * Tra cứu kịch bản mẫu từ tldr và cheat.sh.
 
-  * \[Nền tảng vận hành: Web Desktop, Mobile Responsive, hoặc Ứng dụng di động\].
+  * Gợi ý lệnh mờ.
 
-* **Nội dung nằm ngoài phạm vi phát triển (Tối thiểu 3 nội dung không làm trong đồ án này):**
+  * Tạo và quản lý bí danh.
 
-  * *Nội dung 1:* \[Ví dụ: Tích hợp cổng thanh toán quốc tế đa tiền tệ\].
+  * Cơ chế xử lý hoàn toàn cục bộ.
 
-  * *Nội dung 2:* \[Ví dụ: Tự động hóa kế toán/xuất hóa đơn tài chính sang cơ quan thuế\].
+* **Nội dung nằm ngoài phạm vi phát triển (Kế thừa từ backlog):**
 
-  * *Nội dung 3:* \[Ví dụ: Các thuật toán AI phức tạp đòi hỏi máy chủ cấu hình chuyên dụng\].
+  * Tự động chuyển hướng yêu cầu lên các mô hình điện toán đám mây trả phí.
+
+  * Đăng ký phím tắt toàn cục trên hệ điều hành.
+
+  * Trình nền tự động giám sát và sửa lỗi ngầm sau khi lệnh thực thi thất bại.
 
 ### 2.4. Bảng thuật ngữ nghiệp vụ & Từ viết tắt
 
@@ -85,21 +87,19 @@
 
 ### 3.2. Bảng phân tích so sánh chi tiết
 
-| Tiêu chí so sánh | Phương pháp thủ công / Truyền thống | Giải pháp thương mại hiện có | Giải pháp đề xuất của nhóm | 
-| ----- | ----- | ----- | ----- | 
-| **Chi phí đầu tư & Vận hành** | \[Đánh giá chi phí\] | \[Đánh giá chi phí\] | \[Tối ưu chi phí theo quy mô bài toán\] | 
-| **Tính đồng bộ dữ liệu thời gian thực** | \[Kém / Chậm\] | \[Tốt / Có độ trễ\] | \[Đồng bộ tức thời qua Web API/Database\] | 
-| **Trải nghiệm & Mức độ tiện dụng** | \[Nhiều thao tác thủ công\] | \[Phức tạp, dư thừa tính năng\] | \[Giao diện tối giản, tập trung luồng chính\] | 
-| **Khả năng tùy biến theo nghiệp vụ** | \[Khó kiểm soát lỗi\] | \[Thấp, phụ thuộc bên thứ ba\] | \[Rất cao, nhóm hoàn toàn làm chủ mã nguồn\] | 
-| **Bảo mật & Phân quyền truy cập** | \[Kém, dễ lộ dữ liệu\] | \[Đảm bảo theo gói dịch vụ\] | \[Phân quyền chặt chẽ theo vai trò người dùng\] | 
+| Tiêu chí so sánh | Hỏi AI trên trình duyệt | GitHub Copilot CLI | Warp Terminal | Giải pháp ezcli đề xuất | 
+| ----- | ----- | ----- | ----- | ----- | 
+| **Tính tích hợp** | Kém (phải chuyển qua lại giữa các cửa sổ) | Trung bình (sinh lệnh tách biệt, vẫn cần sao chép) | Tốt (tích hợp trong trình giả lập thiết bị đầu cuối) | Xuất sắc (chạy trực tiếp ngay tại phiên làm việc hiện tại) | 
+| **Chi phí vận hành** | Miễn phí hoặc gói thuê bao | Tốn phí dịch vụ hàng tháng | Phụ thuộc gói dịch vụ đám mây | Hoàn toàn miễn phí (tự lưu trữ cục bộ) | 
+| **Tốc độ phản hồi** | Chậm (độ trễ mạng cao) | Trung bình (1 - 2 giây) | Phụ thuộc máy chủ dịch vụ | Nhanh ($\le 1$ giây với mô hình nén cục bộ) | 
+| **Bảo mật dữ liệu** | Kém (dữ liệu gửi lên máy chủ bên thứ ba) | Kém (dữ liệu truyền qua đám mây) | Không hỗ trợ xử lý nội bộ hoàn toàn | Tuyệt đối (xử lý cục bộ, không rò rỉ dữ liệu ra ngoài) | 
+| **An toàn thực thi** | Không có cơ chế cảnh báo mức độ nguy hiểm | Chỉ hiển thị lệnh | Cảnh báo cơ bản | Phân tích cú pháp tĩnh và xác nhận trước khi chạy | 
 
 ### 3.3. Điểm khác biệt & Lợi thế cạnh tranh của giải pháp đề xuất
 
-* \[Nêu bật giá trị cốt lõi giải quyết đúng điểm đau (pain point) của đối tượng thụ hưởng\].
+* Hoạt động theo nguyên tắc ưu tiên xử lý cục bộ, không phụ thuộc kết nối Internet hay chi phí thuê bao.
 
-* \[Tính tinh gọn trong trải nghiệm người dùng so với các hệ thống cồng kềnh có sẵn\].
-
-* \[Khả năng dễ bảo trì, mở rộng và mở mã nguồn phục vụ học thuật/triển khai thực nghiệm\].
+* Tích hợp sâu cơ chế bảo vệ an toàn (chạy thử nghiệm và phân tích cú pháp tĩnh) giúp ngăn ngừa việc thực thi nhầm các lệnh phá hủy hệ thống.
 
 ## 4. GIẢI PHÁP ĐỀ XUẤT & ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS)
 
@@ -116,61 +116,59 @@
 
 | Mã yêu cầu | Tên chức năng | Mô tả chi tiết hành vi của hệ thống | Mức ưu tiên | Nguồn gốc | Tiêu chí nghiệm thu | 
 | ----- | ----- | ----- | ----- | ----- | ----- | 
-| `FR-01` | \[Tên chức năng 1\] | Hệ thống phải cho phép \[Ai\] thực hiện \[Hành động\] trong điều kiện \[Ngữ cảnh\]. | Must Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-02` | \[Tên chức năng 2\] | Hệ thống phải xử lý \[Nghiệp vụ\] và trả về \[Kết quả/Thông báo\]. | Must Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-03` | \[Tên chức năng 3\] | Hệ thống phải lưu trữ \[Thông tin\] và tự động \[Hành vi tiếp theo\]. | Must Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-04` | \[Tên chức năng 4\] | Hệ thống cho phép cập nhật / chỉnh sửa trạng thái của \[Đối tượng\]. | Should Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-05` | \[Tên chức năng 5\] | Hệ thống cung cấp bộ lọc và tìm kiếm theo \[Các tiêu chí cụ thể\]. | Should Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-06` | \[Tên chức năng 6\] | Hệ thống tự động kiểm tra tính hợp lệ của \[Dữ liệu đầu vào\]. | Must Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-07` | \[Tên chức năng 7\] | Hệ thống gửi thông báo xác nhận đến \[Đối tượng\] sau khi hoàn tất. | Could Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-08` | \[Tên chức năng 8\] | Hệ thống hỗ trợ xuất dữ liệu danh sách dưới định dạng Excel/PDF. | Could Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-09` | \[Tên chức năng 9\] | Hệ thống tổng hợp số liệu và vẽ biểu đồ trực quan theo chu kỳ. | Should Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
-| `FR-10` | \[Tên chức năng 10\] | Hệ thống phân quyền truy cập chức năng theo vai trò người dùng. | Must Have | STK-... | \[Điều kiện quan sát hoặc dữ liệu để xác nhận đạt\] | 
+| `FR-01` | Sinh lệnh từ ngôn ngữ tự nhiên | Tiếp nhận chuỗi văn bản mô tả và sinh ra câu lệnh tương ứng. | Must Have | STK-01, STK-02 | Sinh đúng câu lệnh thực thi hợp lệ theo môi trường hiện tại. | 
+| `FR-02` | Giải thích chi tiết câu lệnh | Phân tích cấu trúc, cờ và tham số của câu lệnh vừa sinh ra theo yêu cầu của người dùng. | Should Have | STK-01 | Hiển thị mô tả rõ ràng từng tham số khi người dùng chọn lệnh giải thích. | 
+| `FR-03` | Xác nhận trước khi thực thi | Cung cấp ba tùy chọn bắt buộc: Thực thi, Giải thích, hoặc Hủy bỏ trước khi chạy bất kỳ lệnh nào. | Must Have | STK-01, STK-02 | Lệnh chỉ được chạy vào hệ thống khi người dùng xác nhận thực thi. | 
+| `FR-04` | Tra cứu mẫu tác vụ phổ biến | Tìm kiếm và hiển thị các trường hợp sử dụng chuẩn thông qua tích hợp dữ liệu tldr và cheat.sh. | Should Have | STK-02 | Trả về danh sách mẫu ví dụ tương ứng với tên lệnh tra cứu. | 
+| `FR-05` | Tìm kiếm mờ lịch sử lệnh | Tìm kiếm các lệnh từng thực hiện trong quá khứ dựa trên thuật toán so khớp mờ. | Should Have | STK-02 | Danh sách kết quả gợi ý đúng câu lệnh gần khớp nhất theo thời gian thực. | 
+| `FR-06` | Quản lý bí danh tự động | Hỗ trợ tạo mới, chỉnh sửa và ghi nhớ các bí danh rút gọn cho các lệnh dài. | Could Have | STK-02 | Bí danh mới được áp dụng ngay lập tức vào phiên làm việc hiện tại. | 
+| `FR-07` | Nhận diện ngữ cảnh hệ thống | Tự động đọc thông tin về hệ điều hành, trình bao đang dùng, thư mục hiện tại để tối ưu câu lệnh sinh ra. | Must Have | STK-04 | Câu lệnh sinh ra khớp hoàn toàn với cú pháp của hệ điều hành và trình bao đang mở. | 
+| `FR-08` | Phân tích an toàn cú pháp | Phân tích cú pháp tĩnh và tô màu cảnh báo nếu câu lệnh có nguy cơ xóa tệp hoặc can thiệp sâu quyền hệ thống. | Must Have | STK-01, STK-04 | Hiển thị cảnh báo trực quan với các câu lệnh có khả năng gây mất mát dữ liệu. | 
 
 ### 4.3. Danh mục yêu cầu phi chức năng (NFR)
 
 | Mã yêu cầu | Nhóm chất lượng | Tiêu chí kỹ thuật định lượng | Phương pháp kiểm chứng | 
 | ----- | ----- | ----- | ----- | 
-| `NFR-01` | **Hiệu năng** | Thời gian phản hồi của hệ thống đối với thao tác tra cứu $\le 1.5$ giây trong điều kiện có ít nhất 50 người dùng đồng thời. | Đo kiểm tải bằng công cụ kiểm thử tự động (k6 / JMeter). | 
-| `NFR-02` | **Bảo mật** | Toàn bộ mật khẩu người dùng phải được mã hóa một chiều an toàn; phiên làm việc hết hạn sau 30 phút không hoạt động. | Kiểm tra cơ sở dữ liệu và đánh giá mã nguồn (Code review). | 
-| `NFR-03` | **Khả năng sử dụng** | Người dùng mới có thể hoàn tất tác vụ chính trong vòng không quá 3 bước thao tác mà không cần tài liệu hướng dẫn. | Kiểm thử trải nghiệm người dùng thực tế (User Testing). | 
-| `NFR-04` | **Tương thích** | Giao diện hiển thị đúng chuẩn trên các trình duyệt phổ biến và tương thích màn hình từ 375px đến 1920px. | Kiểm tra giao diện trên nhiều kích thước màn hình thiết bị. | 
-| `NFR-05` | **Độ khả dụng** | Hệ thống duy trì thời gian hoạt động liên tục đạt tỷ lệ tối thiểu $99.0\%$ trong giai đoạn triển khai thử nghiệm. | Giám sát nhật ký hoạt động của máy chủ (Server uptime logs). | 
-| `NFR-06` | **Toàn vẹn dữ liệu** | Đảm bảo tính toàn vẹn giao dịch (ACID); dữ liệu được sao lưu định kỳ tự động 1 lần mỗi ngày. | Kiểm tra cơ chế tự động sao lưu và khôi phục thử nghiệm CSDL. | 
+| `NFR-01` | **Hiệu năng** | Thời gian sinh câu lệnh từ văn bản $\le 1.0$ giây trên máy tính cá nhân tiêu chuẩn. | Đo đạc thời gian xử lý thực tế qua 50 lần thử nghiệm với các truy vấn khác nhau. | 
+| `NFR-02` | **Bảo mật** | 100% dữ liệu lịch sử thao tác và truy vấn được lưu giữ cục bộ, không truyền dữ liệu ra mạng ngoài. | Giám sát các gói tin mạng bằng công cụ bắt gói tin trong suốt quá trình chạy. | 
+| `NFR-03` | **Tương thích** | Hoạt động đồng nhất trên các hệ điều hành phổ biến (Linux, macOS, Windows) và hỗ trợ các trình bao chính (Bash, Zsh, PowerShell). | Chạy thử nghiệm bộ kiểm thử trên cả ba môi trường hệ điều hành. | 
+| `NFR-04` | **Giao diện** | Giao diện hỗ trợ tô màu cú pháp theo chuẩn ANSI, phân biệt rõ các thành phần lệnh và cảnh báo. | Kiểm tra độ tương phản và định dạng văn bản hiển thị trên các trình giả lập thiết bị đầu cuối. | 
 
 ### 4.4. Đặc tả kịch bản sử dụng
 
 *Mỗi kịch bản phải làm rõ luồng chính và tối thiểu 1 luồng ngoại lệ/rẽ nhánh.*
 
-#### Kịch bản 1: \[Tên tình huống luồng chính thành công\] (`SC-01`)
+#### Kịch bản 1: Sinh câu lệnh từ văn bản tự nhiên và lựa chọn hành động (`SC-01`)
 
-* **Tác nhân chính:** \[Người dùng thực hiện hành động\]
+* **Tác nhân chính:** Người dùng cuối.
 
-* **Tiền điều kiện:** \[Trạng thái bắt buộc của hệ thống hoặc người dùng trước khi bắt đầu\]
+* **Tiền điều kiện:** Công cụ ezcli đã được cấu hình và mô hình xử lý cục bộ đang ở trạng thái sẵn sàng.
 
-* **Sự kiện kích hoạt:** \[Hành động bắt đầu kịch bản của tác nhân\]
+* **Sự kiện kích hoạt:** Người dùng gõ lệnh ezcli kèm theo yêu cầu bằng ngôn ngữ tự nhiên.
 
 * **Luồng sự kiện chính:**
 
-  1. Tác nhân thực hiện thao tác \[Bước 1\].
+  1. Người dùng nhập câu lệnh yêu cầu (Ví dụ: tìm tất cả các tệp có đuôi json trong thư mục hiện tại).
 
-  2. Hệ thống kiểm tra và hiển thị dữ liệu \[Bước 2\].
+  2. Hệ thống thu thập ngữ cảnh làm việc hiện tại (hệ điều hành, trình bao, thư mục) và chuyển vào bộ xử lý.
 
-  3. Tác nhân nhập thông tin cần thiết và xác nhận \[Bước 3\].
+  3. Hệ thống trả về câu lệnh tương ứng trên màn hình và phân tích cú pháp tĩnh.
 
-  4. Hệ thống kiểm tra tính hợp lệ của dữ liệu \[Bước 4\].
+  4. Hệ thống đưa ra menu gồm ba lựa chọn: Thực thi [E], Giải thích [D], Hủy bỏ [A].
 
-  5. Hệ thống ghi nhận dữ liệu vào cơ sở dữ liệu và chuyển trạng thái \[Bước 5\].
+  5. Người dùng nhấn chọn phím E để thực thi.
 
-  6. Hệ thống hiển thị thông báo thành công và gửi phản hồi \[Bước 6\].
+  6. Hệ thống chuyển lệnh xuống trình bao để thực hiện và trả về kết quả cho người dùng.
 
 * **Luồng rẽ nhánh / Ngoại lệ:**
 
-  * *Rẽ nhánh tại bước 4 (Dữ liệu không hợp lệ hoặc xung đột):* Hệ thống giữ nguyên thông tin đã nhập, hiển thị thông báo lỗi cụ thể và yêu cầu tác nhân chỉnh sửa.
+  * *Rẽ nhánh tại bước 5 (Người dùng chọn D):* Hệ thống hiển thị bảng bóc tách ý nghĩa từng tham số của lệnh, sau đó quay lại menu ba lựa chọn.
 
-  * *Ngoại lệ tại bước 5 (Mất kết nối CSDL):* Hệ thống hoàn tác giao dịch, ghi nhật ký lỗi và hiển thị thông báo gián đoạn hệ thống.
+  * *Rẽ nhánh tại bước 5 (Người dùng chọn A):* Hệ thống hủy bỏ câu lệnh và trả quyền điều khiển về dòng lệnh thông thường.
 
-* **Hậu điều kiện:** \[Trạng thái cuối cùng của hệ thống sau khi kịch bản kết thúc\]
+  * *Ngoại lệ tại bước 3 (Phát hiện lệnh nguy hiểm):* Hệ thống đổi màu cảnh báo nổi bật và yêu cầu xác nhận thêm một bước trước khi cho phép bấm thực thi.
+
+* **Hậu điều kiện:** Lệnh được thực thi an toàn trên hệ thống hoặc phiên làm việc kết thúc theo lựa chọn của người dùng.
 
 #### Kịch bản 2: \[Tên tình huống ngoại lệ / Hủy bỏ / Thay đổi\] (`SC-02`)
 
