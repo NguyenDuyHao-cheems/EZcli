@@ -4,11 +4,11 @@
 >
 > **Đơn vị:** Bộ môn Công nghệ Phần mềm – Khoa Công nghệ Thông tin, Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM
 >
-> **Tên đề tài:** \[Nhập tên đề tài chính thức của nhóm tại đây\]
+> **Tên đề tài:** EZcli
 >
-> **Mã nhóm / Lớp:** \[Nhập mã nhóm - Lớp sinh hoạt\]
+> **Mã nhóm / Lớp:** Nhóm 09 - 2024/3
 >
-> **Giảng viên hướng dẫn:** \[Họ và tên Giảng viên hướng dẫn / Giảng viên lý thuyết\]
+> **Giảng viên hướng dẫn:** TS.Ngô Ngọc Đăng Khoa
 
 ## 1. THÔNG TIN DỰ ÁN & ĐÁNH GIÁ THÀNH VIÊN
 
@@ -106,9 +106,9 @@
 
 | Nhu cầu của bên liên quan (Cấu trúc: Là \[ai\], tôi muốn \[làm gì\] để \[đạt được gì\]) | Yêu cầu hệ thống giải quyết tương ứng | 
 | ----- | ----- | 
-| Là **\[Vai trò 1\]**, tôi muốn \[hành động cụ thể\] để \[giá trị nhận được\]. | \[Tên yêu cầu chức năng hoặc mô-đun xử lý\] | 
-| Là **\[Vai trò 2\]**, tôi muốn \[hành động cụ thể\] để \[giá trị nhận được\]. | \[Tên yêu cầu chức năng hoặc mô-đun xử lý\] | 
-| Là **\[Vai trò 3\]**, tôi muốn \[hành động cụ thể\] để \[giá trị nhận được\]. | \[Tên yêu cầu chức năng hoặc mô-đun xử lý\] | 
+| Là **người dùng không chuyên về công nghệ**, tôi muốn được gợi ý lệnh để không phải nhớ lệnh. | Gợi ý lệnh bằng ngôn ngữ tự nhiên | 
+| Là **Lập trình viên**, tôi muốn giao diện thân thiện hơn để dễ sử dụng | 
+| Là **Lập trình viên**, tôi muốn sử dụng được mô hình llm cục bộ để không phải trả tiền API. | \[Tên yêu cầu chức năng hoặc mô-đun xử lý\] | 
 | Là **\[Người dùng chung\]**, tôi muốn thời gian xử lý nhanh và dữ liệu được bảo vệ an toàn. | \[Yêu cầu về hiệu năng hệ thống và bảo mật dữ liệu\] | 
 
 ### 4.2. Danh mục yêu cầu chức năng (FR)
