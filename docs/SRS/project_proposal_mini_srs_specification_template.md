@@ -79,26 +79,34 @@
 
 ### 3.1. Tổng quan các giải pháp hiện hành trên thị trường
 
-* **Giải pháp thủ công / Bán tự động:** \[Đánh giá các cách làm truyền thống như sổ sách, file Excel chia sẻ, nhắn tin nhóm...\].
+* **Giải pháp thủ công / Bán tự động:** 
+  * Tra cứu lệnh bằng tài liệu trên mạng hoặc hỏi AI
+  * Cấu hình gợi ý lệnh mờ
+  * Tạo và quản lý bí danh
+  * Tìm trong lịch sử lệnh đã gõ
 
-* **Giải pháp thương mại đóng gói sẵn:** \[Liệt kê và đánh giá 1 - 2 phần mềm hoặc dịch vụ tương tự đang có trên thị trường\].
+* **Giải pháp thương mại đóng gói sẵn:** 
+  * Warp Terminal: ứng dụng GUI hỗ trợ chat với AI và gõ lệnh trực tiếp trong giao diện.
+  * Shell GPT: tích hợp lệnh `sgpt` và cờ `-s` hỗ trợ gợi ý lệnh bằng ngôn ngữ tự nhiên.
+
 
 ### 3.2. Bảng phân tích so sánh chi tiết
 
 | Tiêu chí so sánh | Hỏi AI trên trình duyệt | Shell GPT (shell_gpt) | Warp Terminal | Giải pháp ezcli đề xuất | 
 | ----- | ----- | ----- | ----- | ----- | 
-| **Tính tích hợp** | Kém (phải chuyển qua lại giữa các cửa sổ) | Tốt (có thể gọi lệnh `sgpt` trực tiếp ngay trong shell) | Tốt (tích hợp trong trình giả lập thiết bị đầu cuối) | Xuất sắc (chạy trực tiếp ngay tại phiên làm việc hiện tại) | 
-| **Chi phí vận hành** | Miễn phí hoặc gói thuê bao | Tiết kiệm / Miễn phí (hỗ trợ mô hình cục bộ / local model hoặc API cá nhân) | Phụ thuộc gói dịch vụ đám mây | Hoàn toàn miễn phí (tự lưu trữ cục bộ) | 
+| **Tính tích hợp** | Kém (phải chuyển qua lại giữa các cửa sổ) | Tốt (có thể gọi lệnh `sgpt` trực tiếp ngay trong shell) | Tốt (tích hợp trong trình giả lập thiết bị đầu cuối) | Tốt (tích hợp gõ lệnh trực tiếp trong ứng dụng) | 
+| **Chi phí vận hành** | Miễn phí hoặc mua gói | Tiết kiệm / Miễn phí (hỗ trợ mô hình cục bộ / local model hoặc API cá nhân) | Phụ thuộc gói dịch vụ đám mây hoặc mô hình cục bộ nhưng dữ liệu phải đi qua server của **Warp**| Hoàn toàn miễn phí (tự lưu trữ cục bộ) | 
 | **Tốc độ phản hồi** | Chậm (độ trễ mạng cao) | Nhanh (khi chạy với mô hình cục bộ hoặc gọi API) | Phụ thuộc máy chủ dịch vụ | Nhanh ($\le 1$ giây với mô hình nén cục bộ) | 
-| **Bảo mật dữ liệu** | Kém (dữ liệu gửi lên máy chủ bên thứ ba) | Cao (hỗ trợ xử lý hoàn toàn cục bộ / local, không gửi dữ liệu ra ngoài) | Không hỗ trợ xử lý nội bộ hoàn toàn | Tuyệt đối (xử lý cục bộ, không rò rỉ dữ liệu ra ngoài) | 
-| **An toàn thực thi** | Không có cơ chế cảnh báo mức độ nguy hiểm | Khá (có cơ chế hỏi xác nhận trước khi chạy và hỗ trợ giải thích lệnh) | Cảnh báo cơ bản | Phân tích cú pháp tĩnh và xác nhận trước khi chạy | 
+| **Bảo mật dữ liệu** | Kém (dữ liệu gửi lên máy chủ bên thứ ba) | Cao (hỗ trợ xử lý hoàn toàn cục bộ / local, không gửi dữ liệu ra ngoài) | Dữ liệu phải đi qua server của Warp dù chạy cục bộ | Tốt (xử lý cục bộ, không rò rỉ dữ liệu ra ngoài) | 
+| **An toàn thực thi** | Có nhắc nhở người dùng nhưng không đảm bảo hoàn toàn vì không có thông tin máy ngươi dùng | Tốt (có cơ chế hỏi xác nhận trước khi chạy và hỗ trợ giải thích lệnh) | Cảnh báo cơ bản | Phân tích cú pháp tĩnh và xác nhận trước khi chạy | 
 | **Độ thân thiện (UX)** | Trung bình (giao diện web trực quan nhưng gây đứt gãy thao tác) | Thấp (người dùng phải cài đặt thủ công shell_gpt, phải nhớ các tham số và câu lệnh để sử dụng, chỉ là lệnh trong shell không phải giao diện thân thiện) | Cao (giao diện terminal đồ họa hiện đại, trực quan) | Cao (giao diện tương tác trực quan, gợi ý thông minh, thao tác tiện lợi mà không cần nhớ cú pháp) | 
 
 ### 3.3. Điểm khác biệt & Lợi thế cạnh tranh của giải pháp đề xuất
 
-* Hoạt động theo nguyên tắc ưu tiên xử lý cục bộ, không phụ thuộc kết nối Internet hay chi phí thuê bao.
-
+* Có thể sử dụng mô hình cục bộ, không cần kết nối Internet hay tốn chi phí API.
+* Dữ liệu cá nhân được xử lý hoàn toàn cục bộ, không rò rỉ dữ liệu ra ngoài.
 * Tích hợp sâu cơ chế bảo vệ an toàn (chạy thử nghiệm và phân tích cú pháp tĩnh) giúp ngăn ngừa việc thực thi nhầm các lệnh phá hủy hệ thống.
+* Giao diện đẹp mắt, tối ưu hóa trải nghiệm người dùng mà không cần phải tự tay tùy biến quá nhiều.
 
 ## 4. GIẢI PHÁP ĐỀ XUẤT & ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS)
 
@@ -106,7 +114,7 @@
 
 | Nhu cầu của bên liên quan (Cấu trúc: Là \[ai\], tôi muốn \[làm gì\] để \[đạt được gì\]) | Yêu cầu hệ thống giải quyết tương ứng | 
 | ----- | ----- | 
-| Là **người dùng không chuyên về công nghệ**, tôi muốn được gợi ý lệnh để không phải nhớ lệnh. | Gợi ý lệnh bằng ngôn ngữ tự nhiên | 
+| Là **người dùng không chuyên về công nghệ**, tôi muốn được gợi ý lệnh để không phải nhớ lệnh. | Gợi ý lệnh bằng ngôn ngữ tự nhiên `FR-01` & `FR-02` | 
 | Là **Lập trình viên**, tôi muốn giao diện thân thiện hơn để dễ sử dụng | 
 | Là **Lập trình viên**, tôi muốn sử dụng được mô hình llm cục bộ để không phải trả tiền API. | \[Tên yêu cầu chức năng hoặc mô-đun xử lý\] | 
 | Là **\[Người dùng chung\]**, tôi muốn thời gian xử lý nhanh và dữ liệu được bảo vệ an toàn. | \[Yêu cầu về hiệu năng hệ thống và bảo mật dữ liệu\] | 
