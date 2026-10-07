@@ -71,8 +71,11 @@
 | Thuật ngữ / Viết tắt | Giải nghĩa chi tiết trong ngữ cảnh đề tài | 
 | ----- | ----- | 
 | `SRS` | Đặc tả yêu cầu phần mềm (Software Requirements Specification) | 
-| `[Thuật ngữ 1]` | \[Định nghĩa rõ quy ước, khái niệm nghiệp vụ đặc thù của bài toán\] | 
-| `[Thuật ngữ 2]` | \[Định nghĩa rõ quy ước, khái niệm nghiệp vụ đặc thù của bài toán\] | 
+| `CLI` | Giao diện dòng lệnh (Command-Line Interface) - Giao diện cho phép người dùng tương tác với hệ điều hành thông qua các dòng lệnh văn bản. | 
+| `Shell` | Chương trình phân giải lệnh của hệ điều hành, tiếp nhận lệnh từ người dùng (qua CLI) và gửi tới hệ điều hành để thực thi. | 
+| `LLM cục bộ` | Mô hình ngôn ngữ lớn (Large Language Model) được tối ưu để chạy trực tiếp trên máy tính cá nhân (local) thay vì trên máy chủ đám mây. | 
+| `Phân tích cú pháp tĩnh` | Kỹ thuật kiểm tra chuỗi lệnh sinh ra mà không cần thực thi chúng, nhằm phát hiện lỗi hoặc cảnh báo các lệnh có tính phá hoại/nguy hiểm. | 
+| `Bí danh` | Tên viết tắt hoặc từ khóa đại diện (Alias) cho một lệnh hay một chuỗi lệnh phức tạp trong môi trường dòng lệnh. | 
 | `DoD` | Tiêu chí hoàn thành cho từng hạng mục công việc (Definition of Done) | 
 
 ## 3. SO SÁNH & ĐÁNH GIÁ CÁC GIẢI PHÁP HIỆN TẠI
@@ -136,10 +139,10 @@
 
 | Mã yêu cầu | Nhóm chất lượng | Tiêu chí kỹ thuật định lượng | Phương pháp kiểm chứng | 
 | ----- | ----- | ----- | ----- | 
-| `NFR-01` | **Hiệu năng** | Thời gian sinh câu lệnh từ văn bản $\le 1.0$ giây trên máy tính cá nhân tiêu chuẩn. | Đo đạc thời gian xử lý thực tế qua 50 lần thử nghiệm với các truy vấn khác nhau. | 
-| `NFR-02` | **Bảo mật** | 100% dữ liệu lịch sử thao tác và truy vấn được lưu giữ cục bộ, không truyền dữ liệu ra mạng ngoài. | Giám sát các gói tin mạng bằng công cụ bắt gói tin trong suốt quá trình chạy. | 
-| `NFR-03` | **Tương thích** | Hoạt động đồng nhất trên các hệ điều hành phổ biến (Linux, macOS, Windows) và hỗ trợ các trình bao chính (Bash, Zsh, PowerShell). | Chạy thử nghiệm bộ kiểm thử trên cả ba môi trường hệ điều hành. | 
-| `NFR-04` | **Giao diện** | Giao diện hỗ trợ tô màu cú pháp theo chuẩn ANSI, phân biệt rõ các thành phần lệnh và cảnh báo. | Kiểm tra độ tương phản và định dạng văn bản hiển thị trên các trình giả lập thiết bị đầu cuối. | 
+| `NFR-01` | **Hiệu năng (Performance)** | Thời gian sinh câu lệnh từ văn bản tự nhiên $\le 2.0$ giây khi chạy LLM cục bộ trên cấu hình máy tính tiêu chuẩn (RAM 8GB, CPU 4 cores) trong 95% trường hợp. | Đo đạc tự động thời gian phản hồi (từ khi gửi yêu cầu đến khi in kết quả) bằng script kiểm thử với tập 100 câu lệnh đầu vào khác nhau. | 
+| `NFR-02` | **Bảo mật & An toàn (Security)** | 100% dữ liệu xử lý cục bộ không truyền ra internet. Nhận diện và cảnh báo thành công 100% các câu lệnh phá hoại (vd: `rm -rf /`, `mkfs`) bằng phân tích cú pháp tĩnh. | Dùng Wireshark kiểm tra gói tin để đảm bảo không có kết nối ra ngoài. Chạy thử nghiệm tập 50 lệnh nguy hiểm (Malicious Dataset) để kiểm chứng cơ chế chặn. | 
+| `NFR-03` | **Tương thích (Compatibility)** | Tỷ lệ sập ứng dụng (crash rate) $\le 1\%$. Lệnh sinh ra tương thích 100% trên 3 môi trường shell mục tiêu: Bash, Zsh (Linux/macOS) và PowerShell (Windows). | Thực thi 200 lượt test tự động trên máy ảo của 3 hệ điều hành tương ứng để xác nhận lệnh sinh ra chạy hợp lệ, không lỗi cú pháp shell. | 
+| `NFR-04` | **Khả dụng (Usability)** | Số thao tác tối đa để xác nhận/thực thi lệnh sau khi sinh là 1 phím bấm (VD: nhấn 'E'). Giao diện render chính xác chuẩn màu ANSI. | Thống kê số bước phím bấm theo kịch bản sử dụng SC-01. Khảo sát 5 người dùng cuối trải nghiệm trực tiếp với mức độ hài lòng yêu cầu $\ge 4/5$. | 
 
 ### 4.4. Đặc tả kịch bản sử dụng
 
