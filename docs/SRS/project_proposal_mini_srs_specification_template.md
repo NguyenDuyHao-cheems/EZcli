@@ -183,31 +183,38 @@
 
 * **Hậu điều kiện:** Lệnh được thực thi an toàn trên hệ thống hoặc phiên làm việc kết thúc theo lựa chọn của người dùng.
 
-#### Kịch bản 2: \[Tên tình huống ngoại lệ / Hủy bỏ / Thay đổi\] (`SC-02`)
+#### Kịch bản 2: Tra cứu lịch sử lệnh hoặc cấu hình bí danh mới. (`SC-02`) 
 
-* **Tác nhân chính:** \[Người dùng thực hiện hành động\]
+* **Tác nhân chính:** Người dùng nâng cao 
 
-* **Tiền điều kiện:** \[Dữ liệu ban đầu đã tồn tại trong hệ thống\]
+* **Tiền điều kiện:** Công cụ ezcli đã được cài đặt và cấu hình. Lịch sử lệnh hoặc dữ liệu cấu hình của người dùng có thể được truy cập cục bộ.
 
-* **Sự kiện kích hoạt:** \[Tác nhân yêu cầu hủy hoặc thay đổi dữ liệu\]
+* **Sự kiện kích hoạt:** Người dùng yêu cầu tra cứu một câu lệnh đã sử dụng trước đó hoặc muốn tạo một bí danh mới cho một câu lệnh thường dùng.
 
 * **Luồng sự kiện chính:**
 
-  1. Tác nhân chọn đối tượng cần điều chỉnh \[Bước 1\].
+  1. Người dùng mở chức năng quản lý lịch sử lệnh hoặc cấu hình bí danh của ezcli.
 
-  2. Hệ thống kiểm tra điều kiện cho phép điều chỉnh \[Bước 2\].
+  2. Người dùng nhập từ khóa hoặc nội dung cần tìm kiếm trong lịch sử lệnh.
 
-  3. Tác nhân xác nhận yêu cầu thay đổi \[Bước 3\].
+  3. Hệ thống thực hiện tìm kiếm mờ trên lịch sử câu lệnh được lưu trữ cục bộ và hiển thị các kết quả phù hợp.
 
-  4. Hệ thống cập nhật bản ghi và giải phóng tài nguyên liên quan \[Bước 4\].
+  4. Người dùng lựa chọn một câu lệnh từ kết quả tìm kiếm để sử dụng hoặc tạo bí danh.
 
-  5. Hệ thống thông báo kết quả cập nhật thành công \[Bước 5\].
+  5. Người dùng nhập tên bí danh mới và xác nhận câu lệnh tương ứng.
+
+  6. Hệ thống kiểm tra tên bí danh và lưu cấu hình bí danh vào bộ nhớ cục bộ.
+
+  7. Hệ thống thông báo tạo bí danh thành công và cho phép người dùng sử dụng bí danh trong các lần thao tác tiếp theo.
 
 * **Luồng rẽ nhánh / Ngoại lệ:**
 
-  * *Rẽ nhánh tại bước 2 (Quá hạn cho phép thay đổi):* Hệ thống từ chối thao tác, thông báo lý do vi phạm quy định cho tác nhân.
-
-* **Hậu điều kiện:** \[Dữ liệu được cập nhật trạng thái mới hoặc bị thu hồi thành công\]
+  * *Rẽ nhánh tại bước 3 (Không tìm thấy lịch sử phù hợp):* Hệ thống thông báo không tìm thấy câu lệnh tương ứng và cho phép người dùng thực hiện tìm kiếm lại với từ khóa khác.
+  
+  * *Rẽ nhánh tại bước 5 (Tên bí danh đã tồn tại):* Hệ thống thông báo tên bí danh đã được sử dụng và yêu cầu người dùng nhập tên khác hoặc xác nhận ghi đè cấu hình hiện tại.
+  
+  * *Ngoại lệ tại bước 6 (Không thể lưu cấu hình):* Hệ thống thông báo lỗi và không tạo bí danh mới nếu dữ liệu không thể được lưu trữ.
+* **Hậu điều kiện:** Lịch sử lệnh được tra cứu thành công hoặc bí danh mới được lưu trữ cục bộ và sẵn sàng sử dụng cho các lần thao tác tiếp theo.
 
 ### 4.5. Kiến trúc tổng thể phần mềm & Công nghệ đề xuất
 
