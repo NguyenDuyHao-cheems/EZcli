@@ -14,12 +14,12 @@
 
 ### 1.1. Danh sách thành viên & Phân công vai trò
 
-| STT | MSSV | Họ và Tên | Vai trò chính trong dự án | % Đóng góp dự kiến | 
-| ----- | ----- | ----- | ----- | ----- | 
-| 1 | 24120306 | **Nguyễn Duy Hào** | **Trưởng nhóm** / Quản lý sản phẩm (Product Owner) | 100% | 
-| 2 | 24120304 | **Trần Thị Bích Hạnh** | Điều phối dự án (Scrum Master) / Lập trình viên Backend | 100% | 
-| 3 | 24120299 | **Nguyễn Thị Ngọc Hà** | Trưởng nhóm Giao diện (Frontend Lead) / Thiết kế UI-UX | 100% | 
-| 4 | 24120044 | **Bùi Thị Thùy Dương** | Quản lý chất lượng & Kiểm thử (QA/QC) / Lập trình viên Backend | 100% | 
+| STT | MSSV     | Họ và Tên              | Vai trò chính trong dự án                                      | % Đóng góp dự kiến |     |
+| --- | -------- | ---------------------- | -------------------------------------------------------------- | ------------------ | --- |
+| 1   | 24120306 | **Nguyễn Duy Hào**     | **Trưởng nhóm**                                                | 100%               |     |
+| 2   | 24120304 | **Trần Thị Bích Hạnh** | Điều phối dự án (Scrum Master)                                 | 100%               |     |
+| 3   | 24120299 | **Nguyễn Thị Ngọc Hà** | Trưởng nhóm Giao diện (Frontend Lead) / Thiết kế UI-UX         | 100%               |     |
+| 4   | 24120044 | **Bùi Thị Thùy Dương** | Quản lý chất lượng & Kiểm thử (QA/QC) / Lập trình viên Backend | 100%               |     |
 
 ## 2. PHÁT BIỂU BÀI TOÁN & PHẠM VI DỰ ÁN
 
@@ -49,14 +49,9 @@
 * **Nội dung trong phạm vi phát triển:**
 
   * Sinh câu lệnh từ văn bản tự nhiên kèm giải thích tùy chọn.
-
   * Cơ chế xác thực trước khi chạy.
-
   * Gợi ý lệnh mờ.
-
-  * Tạo và quản lý bí danh.
-
-  * Cơ chế xử lý hoàn toàn cục bộ.
+  * Hỗ trợ sử dụng mô hình cục bộ qua ollama. 
 
 * **Nội dung nằm ngoài phạm vi phát triển:**
 
@@ -96,9 +91,7 @@
   * **Warp Terminal:** ứng dụng GUI hỗ trợ chat với AI và gõ lệnh trực tiếp trong giao diện.
     * Trình giả lập thiết bị đầu cuối thế hệ mới tích hợp trợ lý AI. Mặc dù mang lại trải nghiệm tốt cho người dùng khi họ có thể gõ lệnh trực tiếp, nhưng Warp lại yêu cầu kết nối mạng, toàn bộ luồng dữ liệu/truy vấn bắt buộc phải đi qua máy chủ trung gian của Warp (kể cả khi kết nối tới các mô hình AI cục bộ như Ollama/localhost), dẫn đến rủi ro về quyền riêng tư và chi phí duy trì dịch vụ.
   * **Shell GPT:** tích hợp lệnh `sgpt` và cờ `-s` hỗ trợ gợi ý lệnh bằng ngôn ngữ tự nhiên.
-    * Công cụ dòng lệnh hỗ trợ sinh lệnh và giải thích thông qua tham số (ví dụ: sgpt --shell). Điểm hạn chế của Shell GPT là phụ thuộc chủ yếu vào OpenAI API trả phí, chưa tối ưu tốt cho các mô hình chạy cục bộ (local models), đồng thời người dùng vẫn phải nhớ các cờ/cú pháp của chính lệnh đó.
-  * **LazyGit:** Công cụ TUI hỗ trợ quản lý Git trực quan. 
-      * Tuy tiện lợi nhưng phạm vi ứng dụng bị bó hẹp hoàn toàn trong các tác vụ Git, không thể hỗ trợ các lệnh hệ thống, thao tác tệp tin hay quản lý quy trình khác. 
+    * *Công cụ dòng lệnh* hỗ trợ sinh lệnh và giải thích thông qua tham số (ví dụ: sgpt --shell). Điểm hạn chế của Shell GPT là chưa tối ưu tốt cho các mô hình chạy cục bộ (local models), đồng thời người dùng vẫn phải nhớ các cờ/cú pháp của chính lệnh đó.
 ### 3.2. Bảng phân tích so sánh chi tiết
 
 | Tiêu chí so sánh | Hỏi AI trên trình duyệt | Shell GPT (shell_gpt) | Warp Terminal | Giải pháp ezcli đề xuất | 
@@ -118,40 +111,41 @@
 
 * **Chủ động phân tích trước khi chạy:** EZcli không chỉ chuyển đổi yêu cầu bằng ngôn ngữ tự nhiên thành câu lệnh mà còn thực hiện phân tích cú pháp và kiểm tra an toàn trước khi cho phép thực thi. Hệ thống có thể đưa ra cảnh báo đối với những câu lệnh có khả năng gây ảnh hưởng đến dữ liệu hoặc hệ thống. Người dùng được cung cấp các lựa chọn để xem giải thích, xác nhận thực thi hoặc hủy thao tác, qua đó giảm nguy cơ thực hiện nhầm các câu lệnh không mong muốn.
 
-* **Giao diện trực quan & tối ưu trải nghiệm người dùng:** EZcli được thiết kế với giao diện dòng lệnh trực quan, sử dụng màu sắc, syntax highlighting, thông báo và cảnh báo rõ ràng để giúp người dùng dễ theo dõi kết quả. Các chức năng như gợi ý câu lệnh, tìm kiếm lịch sử và quản lý bí danh giúp giảm số thao tác phải thực hiện thủ công, đồng thời hạn chế việc người dùng phải tự tùy biến terminal quá nhiều để có được trải nghiệm thuận tiện.
+* **Giao diện trực quan & tối ưu trải nghiệm người dùng:** EZcli được thiết kế với giao diện dòng lệnh trực quan, sử dụng màu sắc, syntax highlighting, thông báo và cảnh báo rõ ràng để giúp người dùng dễ theo dõi kết quả. Các chức năng như gợi ý câu lệnh, tìm kiếm lịch sử và quản lý bí danh giúp giảm số thao tác phải thực hiện thủ công, đồng thời hạn chế việc người dùng phải *tự tùy biến* terminal quá nhiều để có được trải nghiệm thuận tiện.
 
 ## 4. GIẢI PHÁP ĐỀ XUẤT & ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS)
 
 ### 4.1. Bảng câu chuyện người dùng
 
-| Nhu cầu của bên liên quan (Cấu trúc: Là \[ai\], tôi muốn \[làm gì\] để \[đạt được gì\]) | Yêu cầu hệ thống giải quyết tương ứng | 
-| ----- | ----- | 
-| Là **người dùng không chuyên về công nghệ**, tôi muốn được gợi ý lệnh để không phải nhớ lệnh. | Gợi ý lệnh bằng ngôn ngữ tự nhiên `FR-01` & `FR-02` | 
-| Là **Lập trình viên**, tôi muốn giao diện thân thiện hơn để dễ sử dụng | 
-| Là **Lập trình viên**, tôi muốn sử dụng được mô hình llm cục bộ để không phải trả tiền API. | \[Tên yêu cầu chức năng hoặc mô-đun xử lý\] | 
-| Là **\[Người dùng chung\]**, tôi muốn thời gian xử lý nhanh và dữ liệu được bảo vệ an toàn. | \[Yêu cầu về hiệu năng hệ thống và bảo mật dữ liệu\] | 
+| Nhu cầu của bên liên quan                                                                             | Yêu cầu hệ thống giải quyết tương ứng               |     |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------- | --- |
+| Là **người dùng không chuyên về công nghệ**, tôi muốn được gợi ý lệnh để không phải nhớ lệnh.         | Gợi ý lệnh bằng ngôn ngữ tự nhiên `FR-01` & `FR-02` |     |
+| Là **Lập trình viên**, tôi muốn 1 phần mềm được cấu hình sẵn từ đầu, không phải mất công tự tùy biến. | `NFR-04`                                            |     |
+| Là **Lập trình viên**, tôi muốn sử dụng được mô hình llm cục bộ để không phải trả tiền API.           | `Fr-01` và `NFR-02`                                 |     |
+| Là **Người dùng chung**, tôi muốn thời gian xử lý nhanh và dữ liệu được bảo vệ an toàn.               | `NFR-02`và `NFR-01`                                 |     |
 
 ### 4.2. Danh mục yêu cầu chức năng (FR)
 
-| Mã yêu cầu | Tên chức năng | Mô tả chi tiết hành vi của hệ thống | Mức ưu tiên | Nguồn gốc | Tiêu chí nghiệm thu | 
-| ----- | ----- | ----- | ----- | ----- | ----- | 
-| `FR-01` | Sinh lệnh từ ngôn ngữ tự nhiên | Tiếp nhận chuỗi văn bản mô tả và sinh ra câu lệnh tương ứng. | Must Have | STK-01, STK-02 | Sinh đúng câu lệnh thực thi hợp lệ theo môi trường hiện tại. | 
-| `FR-02` | Giải thích chi tiết câu lệnh | Phân tích cấu trúc, cờ và tham số của câu lệnh vừa sinh ra theo yêu cầu của người dùng. | Should Have | STK-01 | Hiển thị mô tả rõ ràng từng tham số khi người dùng chọn lệnh giải thích. | 
-| `FR-03` | Xác nhận trước khi thực thi | Cung cấp ba tùy chọn bắt buộc: Thực thi, Giải thích, hoặc Hủy bỏ trước khi chạy bất kỳ lệnh nào. | Must Have | STK-01, STK-02 | Lệnh chỉ được chạy vào hệ thống khi người dùng xác nhận thực thi. | 
-| `FR-04` | Tra cứu mẫu tác vụ phổ biến | Tìm kiếm và hiển thị các trường hợp sử dụng chuẩn thông qua tích hợp dữ liệu tldr và cheat.sh. | Should Have | STK-02 | Trả về danh sách mẫu ví dụ tương ứng với tên lệnh tra cứu. | 
-| `FR-05` | Tìm kiếm mờ lịch sử lệnh | Tìm kiếm các lệnh từng thực hiện trong quá khứ dựa trên thuật toán so khớp mờ. | Should Have | STK-02 | Danh sách kết quả gợi ý đúng câu lệnh gần khớp nhất theo thời gian thực. | 
-| `FR-06` | Quản lý bí danh tự động | Hỗ trợ tạo mới, chỉnh sửa và ghi nhớ các bí danh rút gọn cho các lệnh dài. | Could Have | STK-02 | Bí danh mới được áp dụng ngay lập tức vào phiên làm việc hiện tại. | 
-| `FR-07` | Nhận diện ngữ cảnh hệ thống | Tự động đọc thông tin về hệ điều hành, trình bao đang dùng, thư mục hiện tại để tối ưu câu lệnh sinh ra. | Must Have | STK-04 | Câu lệnh sinh ra khớp hoàn toàn với cú pháp của hệ điều hành và trình bao đang mở. | 
-| `FR-08` | Phân tích an toàn cú pháp | Phân tích cú pháp tĩnh và tô màu cảnh báo nếu câu lệnh có nguy cơ xóa tệp hoặc can thiệp sâu quyền hệ thống. | Must Have | STK-01, STK-04 | Hiển thị cảnh báo trực quan với các câu lệnh có khả năng gây mất mát dữ liệu. | 
+| Mã yêu cầu | Tên chức năng                  | Mô tả chi tiết hành vi của hệ thống                                                                          | Mức ưu tiên | Nguồn gốc      | Tiêu chí nghiệm thu                                                            |     |
+| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------ | ----------- | -------------- | ------------------------------------------------------------------------------ | --- |
+| `FR-01`    | Sinh lệnh từ ngôn ngữ tự nhiên | Tiếp nhận chuỗi văn bản mô tả và sinh ra câu lệnh tương ứng.                                                 | Must Have   | STK-01, STK-02 | Sinh đúng câu lệnh thực thi hợp lệ theo môi trường hiện tại.                   |     |
+| `FR-02`    | Giải thích chi tiết câu lệnh   | Phân tích cấu trúc, cờ và tham số của câu lệnh vừa sinh ra theo yêu cầu của người dùng.                      | Should Have | STK-01         | Hiển thị mô tả rõ ràng từng tham số khi người dùng chọn lệnh giải thích.       |     |
+| `FR-03`    | Xác nhận trước khi thực thi    | Cung cấp ba tùy chọn bắt buộc: Thực thi, Giải thích, hoặc Hủy bỏ trước khi chạy bất kỳ lệnh nào.             | Must Have   | STK-01, STK-02 | Lệnh chỉ được chạy vào hệ thống khi người dùng xác nhận thực thi.              |     |
+| `FR-04`    | Tra cứu mẫu tác vụ phổ biến    | Tìm kiếm và hiển thị các trường hợp sử dụng chuẩn thông qua tích hợp dữ liệu tldr và cheat.sh.               | Should Have | STK-02         | Trả về danh sách mẫu ví dụ tương ứng với tên lệnh tra cứu.                     |     |
+| `FR-05`    | Tìm kiếm mờ lịch sử lệnh       | Tìm kiếm các lệnh từng thực hiện trong quá khứ dựa trên thuật toán so khớp mờ.                               | Should Have | STK-02         | Danh sách kết quả gợi ý đúng câu lệnh gần khớp nhất theo thời gian thực.       |     |
+| `FR-06`    | Quản lý bí danh tự động        | Hỗ trợ tạo mới, chỉnh sửa và ghi nhớ các bí danh rút gọn cho các lệnh dài.                                   | Could Have  | STK-02         | Bí danh mới được áp dụng ngay lập tức vào phiên làm việc hiện tại.             |     |
+| `FR-07`    | Nhận diện ngữ cảnh hệ thống    | Tự động đọc thông tin về hệ điều hành, shell đang dùng, thư mục hiện tại để tối ưu câu lệnh sinh ra.         | Must Have   | STK-04         | Câu lệnh sinh ra khớp hoàn toàn với cú pháp của hệ điều hành và shell đang mở. |     |
+| `FR-08`    | Phân tích an toàn cú pháp      | Phân tích cú pháp tĩnh và tô màu cảnh báo nếu câu lệnh có nguy cơ xóa tệp hoặc can thiệp sâu quyền hệ thống. | Must Have   | STK-01, STK-04 | Hiển thị cảnh báo trực quan với các câu lệnh có khả năng gây mất mát dữ liệu.  |     |
 
 ### 4.3. Danh mục yêu cầu phi chức năng (NFR)
 
-| Mã yêu cầu | Nhóm chất lượng | Tiêu chí kỹ thuật định lượng | Phương pháp kiểm chứng | 
-| ----- | ----- | ----- | ----- | 
-| `NFR-01` | **Hiệu năng (Performance)** | Thời gian sinh câu lệnh từ văn bản tự nhiên $\le 2.0$ giây khi chạy LLM cục bộ trên cấu hình máy tính tiêu chuẩn (RAM 8GB, CPU 4 cores) trong 95% trường hợp. | Đo đạc tự động thời gian phản hồi (từ khi gửi yêu cầu đến khi in kết quả) bằng script kiểm thử với tập 100 câu lệnh đầu vào khác nhau. | 
-| `NFR-02` | **Bảo mật & An toàn (Security)** | 100% dữ liệu xử lý cục bộ không truyền ra internet. Nhận diện và cảnh báo thành công 100% các câu lệnh phá hoại (vd: `rm -rf /`, `mkfs`) bằng phân tích cú pháp tĩnh. | Dùng Wireshark kiểm tra gói tin để đảm bảo không có kết nối ra ngoài. Chạy thử nghiệm tập 50 lệnh nguy hiểm (Malicious Dataset) để kiểm chứng cơ chế chặn. | 
-| `NFR-03` | **Tương thích (Compatibility)** | Tỷ lệ sập ứng dụng (crash rate) $\le 1\%$. Lệnh sinh ra tương thích 100% trên 3 môi trường shell mục tiêu: Bash, Zsh (Linux/macOS) và PowerShell (Windows). | Thực thi 200 lượt test tự động trên máy ảo của 3 hệ điều hành tương ứng để xác nhận lệnh sinh ra chạy hợp lệ, không lỗi cú pháp shell. | 
-| `NFR-04` | **Khả dụng (Usability)** | Số thao tác tối đa để xác nhận/thực thi lệnh sau khi sinh là 1 phím bấm (VD: nhấn 'E'). Giao diện render chính xác chuẩn màu ANSI. | Thống kê số bước phím bấm theo kịch bản sử dụng SC-01. Khảo sát 5 người dùng cuối trải nghiệm trực tiếp với mức độ hài lòng yêu cầu $\ge 4/5$. | 
+| Mã yêu cầu | Nhóm chất lượng        | Tiêu chí kỹ thuật định lượng                                                                                                                                          | Phương pháp kiểm chứng                                                                                                                 |     |
+| ---------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `NFR-01`   | **Hiệu năng **         | Thời gian sinh câu lệnh từ văn bản tự nhiên $\le 1.0$ giây khi chạy LLM cục bộ trên cấu hình máy tính tiêu chuẩn  (mô hình 3B tham số, máy 4GB VRAM)                  | Đo đạc tự động thời gian phản hồi (từ khi gửi yêu cầu đến khi in kết quả) bằng script kiểm thử với tập 100 câu lệnh đầu vào khác nhau. |     |
+| `NFR-02`   | **Bảo mật & An toàn ** | 100% dữ liệu xử lý cục bộ không truyền ra internet. Nhận diện và cảnh báo thành công 100% các câu lệnh phá hoại (vd: `rm -rf /`, `mkfs`) bằng phân tích cú pháp tĩnh. | Chạy thử nghiệm tập 50 lệnh nguy hiểm (Malicious Dataset) để kiểm chứng cơ chế cảnh báo.                                               |     |
+| `NFR-03`   | **Tương thích **       | Tỷ lệ sập ứng dụng  $\le 1\%$. Lệnh sinh ra tương thích 100% trên 3 môi trường shell mục tiêu: Bash, Zsh (Linux/macOS) và PowerShell (Windows).                       | Thực thi 200 lượt test tự động trên máy ảo của 3 hệ điều hành tương ứng để xác nhận lệnh sinh ra chạy hợp lệ, không lỗi cú pháp shell. |     |
+| `NFR-04`   | **Độ thân thiện**      | Hỗ trợ theme light & dark.  Người dùng không cần phải ấn 1 chỗ nhiều lần mới tìm được giao diện mình cần.                                                             | Có nút chuyển light & dark mode. Các nút bấm không phân quá 3 cấp                                                                      |     |
+
 
 ### 4.4. Đặc tả kịch bản sử dụng
 
@@ -163,17 +157,17 @@
 
 * **Tiền điều kiện:** Công cụ ezcli đã được cấu hình và mô hình xử lý cục bộ đang ở trạng thái sẵn sàng.
 
-* **Sự kiện kích hoạt:** Người dùng gõ lệnh ezcli kèm theo yêu cầu bằng ngôn ngữ tự nhiên.
+* **Sự kiện kích hoạt:** Người dùng nhập yêu cầu bằng ngôn ngữ tự nhiên.
 
 * **Luồng sự kiện chính:**
 
-  1. Người dùng nhập câu lệnh yêu cầu (Ví dụ: tìm tất cả các tệp có đuôi json trong thư mục hiện tại).
+  1. Người dùng nhập câu lệnh yêu cầu (Ví dụ: What is the command to list file in this directory).
 
-  2. Hệ thống thu thập ngữ cảnh làm việc hiện tại (hệ điều hành, trình bao, thư mục) và chuyển vào bộ xử lý.
+  2. Hệ thống thu thập ngữ cảnh làm việc hiện tại (thư mục hiện tại) và chuyển vào bộ xử lý.
 
   3. Hệ thống trả về câu lệnh tương ứng trên màn hình và phân tích cú pháp tĩnh.
 
-  4. Hệ thống đưa ra menu gồm ba lựa chọn: Thực thi [E], Giải thích [D], Hủy bỏ [A].
+  4. Hệ thống đưa ra menu gồm 4 lựa chọn: Thực thi [E], Sửa đổi [M], Giải thích [D], Hủy bỏ [A].
 
   5. Người dùng nhấn chọn phím E để thực thi.
 
@@ -184,7 +178,7 @@
   * *Rẽ nhánh tại bước 5 (Người dùng chọn D):* Hệ thống hiển thị bảng bóc tách ý nghĩa từng tham số của lệnh, sau đó quay lại menu ba lựa chọn.
 
   * *Rẽ nhánh tại bước 5 (Người dùng chọn A):* Hệ thống hủy bỏ câu lệnh và trả quyền điều khiển về dòng lệnh thông thường.
-
+  * *Rẽ nhánh tại bước 5 (Người dùng chọn M):* cho phép người dùng sửa đổi lệnh và hiển thị lại menu lựa chọn bên dưới.
   * *Ngoại lệ tại bước 3 (Phát hiện lệnh nguy hiểm):* Hệ thống đổi màu cảnh báo nổi bật và yêu cầu xác nhận thêm một bước trước khi cho phép bấm thực thi.
 
 * **Hậu điều kiện:** Lệnh được thực thi an toàn trên hệ thống hoặc phiên làm việc kết thúc theo lựa chọn của người dùng.
@@ -220,25 +214,24 @@
 * **Mô hình kiến trúc phần mềm:** 
 EZcli sử dụng kiến trúc Local-first, trong đó các thành phần chính của hệ thống được thực thi trực tiếp trên máy tính của người dùng, không phụ thuộc vào máy chủ trung gian. Phù hợp với yêu cầu hoạt động ngoại tuyến, xử lý cục bộ và bảo vệ dữ liệu người dùng.
 
-* **Công nghệ giao diện dòng lệnh (CLI/TUI):** EZcli dự kiến được xây dựng bằng Python CLI, kết hợp Rich để hỗ trợ màu sắc, cảnh báo và syntax highlighting. prompt_toolkit có thể được sử dụng để hỗ trợ nhập liệu tương tác, tự động gợi ý và phím tắt. Nhằm tạo giao diện CLI trực quan và thuận tiện hơn cho người dùng.
+* **Công nghệ giao diện dòng lệnh (CLI/TUI):** EZcli dự kiến được xây dựng bằng Python CLI, kết hợp Rich để hỗ trợ màu sắc, cảnh báo và syntax highlighting. prompt_toolkit có thể được sử dụng để hỗ trợ nhập liệu tương tác, tự động gợi ý và phím tắt. Nhằm tạo giao diện TUI trực quan và thuận tiện hơn cho người dùng.
 
-* **Công nghệ xử lý và mô hình AI:**
-EZcli sử dụng mô hình ngôn ngữ chạy cục bộ để chuyển đổi yêu cầu bằng ngôn ngữ tự nhiên thành câu lệnh CLI. Việc chạy mô hình trên thiết bị người dùng giúp hệ thống có thể hoạt động khi không có Internet và hạn chế việc dữ liệu gửi đến dịch vụ bên ngoài.
+* **Công nghệ xử lý và mô hình AI:** liên kết với mô hình cục bộ thông qua ollama. 
 
 * **Lưu trữ dữ liệu:**
-Các dữ liệu như lịch sử câu lệnh, bí danh và cấu hình người dùng được lưu trữ cục bộ trên thiết bị. Giúp EZcli không cần sử dụng cơ sở dữ liệu hoặc máy chủ bên ngoài cho các chức năng chính.
+Các dữ liệu được lưu trữ cục bộ trên thiết bị. Dùng định dạng txt/json/md.
 
 * **Giải pháp triển khai & Hạ tầng:**
-EZcli được đóng gói và cài đặt trực tiếp trên máy tính của người dùng, hỗ trợ các hệ điều hành Windows, Linux và macOS. Hệ thống không yêu cầu Cloud VPS hay máy chủ riêng để xử lý yêu cầu.
+EZcli được đóng gói và cài đặt trực tiếp trên máy tính của người dùng, hỗ trợ các hệ điều hành Windows, Linux và macOS. 
 ### 4.6. Yêu cầu môi trường & Phần cứng
 
 * **Phía Máy chủ:**
 
-  * Không yêu cầu máy chủ. Vì EZcli được thiết kế theo kiến trúc local-first và xử lý trực tiếp trên máy tính của người dùng.
+  * Không yêu cầu máy chủ. 
 
 * **Phía Người dùng (Client):**
 
-  * Thiết bị: Máy tính cá nhân hoặc điện thoại thông minh.
+  * Thiết bị: Máy tính cá nhân
 
   * Hệ điều hành: Windows, Linux hoặc macOS.
 
@@ -249,7 +242,7 @@ EZcli được đóng gói và cài đặt trực tiếp trên máy tính của 
   * RAM: Tối thiểu 4 GB RAM trống (khuyến nghị 8 GB trở lên để mô hình hoạt động ổn định.)
 
   * Ổ đĩa: Tối thiểu 3 GB dung lượng trống cho chương trình, mô hình SLM và cache.
-  
+  - VRAM: 4GB (đối với macOS thì yêu cầu ram > 4GB)
   * Internet: Không bắt buộc
 
   * Quyền hệ thống: EZcli cần quyền phù hợp để thực thi các lệnh mà người dùng yêu cầu; các lệnh có nguy cơ ảnh hưởng hệ thống sẽ được cảnh báo và yêu cầu xác nhận trước khi thực thi.
