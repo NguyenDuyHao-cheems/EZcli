@@ -239,37 +239,45 @@
 
 ### 5.1. Thiết lập quy trình phát triển
 
-* **Độ dài một chu kỳ (Sprint):** 02 tuần / Sprint.
+* **Mô hình làm việc:** Nhóm áp dụng Scrum để phát triển theo từng phần nhỏ, ưu tiên các chức năng cốt lõi của ứng dụng dòng lệnh EZcli và liên tục kiểm tra sản phẩm sau mỗi Sprint.
+
+* **Độ dài một chu kỳ (Sprint):** 02 tuần / Sprint. Mỗi Sprint phải tạo ra ít nhất một phần chức năng hoặc tài liệu có thể kiểm tra được.
 
 * **Các buổi làm việc theo quy chuẩn Scrum:**
 
-  * *Lập kế hoạch Sprint (Sprint Planning):* Tổ chức vào đầu mỗi Sprint để thống nhất mục tiêu và phân rã công việc chi tiết.
+  * *Lập kế hoạch Sprint (Sprint Planning):* Tổ chức vào đầu mỗi Sprint để Product Owner thống nhất mục tiêu, nhóm chọn các yêu cầu có thể thực hiện và phân rã thành các task cụ thể.
 
-  * *Họp kiểm tra tiến độ hàng ngày (Daily Standup):* Trao đổi nhanh 10-15 phút để cập nhật công việc hoàn thành, kế hoạch tiếp theo và các khó khăn gặp phải.
+  * *Họp cập nhật tiến độ (Daily Standup):* Tổ chức ngắn gọn 10-15 phút theo lịch thống nhất của nhóm. Mỗi thành viên báo cáo phần đã hoàn thành, phần tiếp theo và trở ngại cần hỗ trợ.
 
-  * *Đánh giá kết quả Sprint (Sprint Review):* Demo phần mềm chạy được cho các thành viên và ghi nhận phản hồi vào cuối Sprint.
+  * *Đánh giá kết quả Sprint (Sprint Review):* Tổ chức vào cuối Sprint để chạy thử phần chức năng đã hoàn thành, đối chiếu với tiêu chí nghiệm thu và ghi nhận phản hồi.
 
-  * *Họp rút kinh nghiệm nội bộ (Sprint Retrospective):* Phân tích các điểm làm tốt và các điểm cần khắc phục cho Sprint kế tiếp.
+  * *Họp cải tiến (Sprint Retrospective):* Tổ chức sau Sprint Review để xác định điểm làm tốt, vấn đề phát sinh và biện pháp cải thiện cho Sprint tiếp theo.
+
+* **Quản lý công việc:** Mỗi task phải liên kết với một yêu cầu `FR`, `NFR` hoặc hạng mục tài liệu, có người phụ trách, mức ưu tiên và Sprint thực hiện. Trạng thái công việc gồm `To do`, `In progress`, `Review` và `Done`.
 
 * **Tiêu chuẩn hoàn thành cho một hạng mục công việc (DoD):**
 
-  * \[x\] Mã nguồn vượt qua kiểm tra tĩnh (Linter) và được rà soát bởi ít nhất 1 thành viên khác trong nhóm.
+  * Mã nguồn vượt qua kiểm tra tĩnh và được ít nhất một thành viên khác rà soát.
 
-  * \[x\] Đã hoàn thành kiểm thử đơn vị (Unit Test) cho các hàm xử lý logic cốt lõi.
+  * Có kiểm thử cho phần logic cốt lõi và các luồng lỗi quan trọng.
 
-  * \[x\] Đã triển khai và hoạt động trơn tru trên môi trường kiểm thử (Staging/Dev).
+  * Chức năng chạy được trên môi trường phát triển/kiểm thử đã thống nhất, phù hợp với hệ điều hành và shell được hỗ trợ.
 
-  * \[x\] Tài liệu kỹ thuật, đặc tả API và ma trận truy vết được cập nhật đồng bộ.
+  * Luồng chính của EZcli được kiểm tra, bao gồm sinh lệnh, giải thích, hủy hoặc xác nhận trước khi thực thi.
+
+  * Các lệnh có nguy cơ gây mất dữ liệu hoặc thay đổi hệ thống được cảnh báo trước khi thực thi.
+
+  * Tài liệu liên quan và ma trận truy vết được cập nhật; không còn lỗi nghiêm trọng đã biết.
 
 ### 5.2. Lộ trình phát triển & Kế hoạch chi tiết từng Sprint
 
 | Giai đoạn / Sprint | Thời lượng | Mục tiêu cốt lõi | Hạng mục công việc chính | Sản phẩm bàn giao dự kiến | 
 | ----- | ----- | ----- | ----- | ----- | 
-| **Sprint 0** | Tuần 1 - 2 | Khảo sát yêu cầu, thiết kế kiến trúc và chuẩn bị môi trường | \- Xác định phạm vi và lập tài liệu Mini-SRS  \- Thiết kế cơ sở dữ liệu và giao diện mẫu sơ bộ  \- Khởi tạo kho mã nguồn (Git) và cấu hình quy chuẩn | Tài liệu SRS phiên bản 1.0, Thiết kế CSDL, Kho mã nguồn chuẩn bị xong | 
-| **Sprint 1** | Tuần 3 - 4 | Xây dựng khung nền tảng và chức năng quản lý người dùng | \- Hiện thực hóa mô hình xác thực và phân quyền  \- Xây dựng giao diện cơ bản và các form nhập liệu cốt lõi  \- Lập kịch bản kiểm thử cho các yêu cầu đã chọn | Phiên bản chạy được luồng đăng nhập, xác thực và phân quyền | 
-| **Sprint 2** | Tuần 5 - 6 | Hiện thực hóa các nghiệp vụ cốt lõi của bài toán | \- Xây dựng các API nghiệp vụ chính của đề tài  \- Tích hợp giao diện người dùng với cơ sở dữ liệu  \- Xử lý ràng buộc và kiểm soát lỗi nghiệp vụ | Phiên bản ứng dụng chạy hoàn chỉnh luồng nghiệp vụ chính | 
-| **Sprint 3** | Tuần 7 - 8 | Hoàn thiện các chức năng nâng cao và xử lý yêu cầu thay đổi | \- Bổ sung các chức năng báo cáo, thống kê dữ liệu  \- Tiếp nhận và xử lý yêu cầu thay đổi phát sinh  \- Đo kiểm hiệu năng và độ ổn định hệ thống | Phiên bản ứng dụng hoàn chỉnh toàn bộ tính năng đề ra | 
-| **Sprint 4** | Tuần 9 | Kiểm thử toàn diện, sửa lỗi và đóng gói bàn giao | \- Kiểm thử chấp nhận người dùng (UAT)  \- Sửa toàn bộ lỗi tồn đọng, tối ưu mã nguồn  \- Đóng gói sản phẩm và hoàn thiện tài liệu báo cáo | Bộ mã nguồn hoàn chỉnh, Sản phẩm triển khai thực tế, Báo cáo đồ án | 
+| **Sprint 0** | Tuần 1 - 2 | Chốt yêu cầu, kiến trúc và môi trường phát triển | \- Rà soát phạm vi, user story, `FR` và `NFR`  \- Chốt kiến trúc ứng dụng CLI và cơ chế sử dụng mô hình cục bộ  \- Khởi tạo kho mã nguồn, quy ước code, kiểm thử và review  \- Hoàn thiện Mini-SRS phiên bản đầu | Mini-SRS phiên bản 1.0, kiến trúc sơ bộ, kho mã nguồn và môi trường phát triển sẵn sàng |
+| **Sprint 1** | Tuần 3 - 4 | Xây dựng khung EZcli và nhận diện ngữ cảnh hệ thống | \- Xây dựng giao diện dòng lệnh/tương tác  \- Tiếp nhận yêu cầu bằng ngôn ngữ tự nhiên  \- Nhận diện hệ điều hành, shell và thư mục hiện tại theo `FR-07`  \- Chuẩn bị cơ chế kết nối với mô hình xử lý cục bộ | Phiên bản có thể khởi động, nhận yêu cầu và thu thập context của môi trường hiện tại |
+| **Sprint 2** | Tuần 5 - 6 | Hoàn thành luồng sinh, giải thích và xác nhận lệnh | \- Hiện thực `FR-01` sinh lệnh và `FR-02` giải thích lệnh  \- Hiện thực `FR-03` với các lựa chọn thực thi, giải thích hoặc hủy  \- Kiểm tra lệnh trước khi chuyển cho shell  \- Xử lý đầu vào không hợp lệ và lỗi từ mô hình  \- Viết unit test cho luồng chính | Phiên bản chạy được luồng từ yêu cầu tự nhiên đến kết quả thực thi hoặc hủy lệnh |
+| **Sprint 3** | Tuần 7 - 8 | Hoàn thiện chức năng nâng cao và an toàn thực thi | \- Hiện thực tra cứu mẫu tác vụ theo `FR-04`  \- Tìm kiếm mờ lịch sử theo `FR-05`  \- Tạo, sửa và sử dụng bí danh theo `FR-06`  \- Phân tích cú pháp và cảnh báo lệnh nguy hiểm theo `FR-08`  \- Kiểm thử các trường hợp biên và yêu cầu thay đổi đã được chấp thuận | Phiên bản tích hợp các chức năng nâng cao, lịch sử/bí danh và cảnh báo an toàn |
+| **Sprint 4** | Tuần 9 | Kiểm thử, tối ưu và đóng gói bàn giao | \- Kiểm thử tích hợp và nghiệm thu các luồng chính  \- Đo các yêu cầu `NFR-01` đến `NFR-04` trong khả năng của nhóm  \- Kiểm tra dữ liệu được lưu và xử lý cục bộ  \- Sửa lỗi, tối ưu và đóng gói ứng dụng  \- Hoàn thiện hướng dẫn sử dụng, tài liệu và báo cáo | Phiên bản EZcli hoàn chỉnh có thể cài đặt/chạy thử, bộ kiểm thử và tài liệu bàn giao |
 
 ### 5.3. Quy trình tiếp nhận & Xử lý thay đổi yêu cầu
 
@@ -300,23 +308,31 @@
 
 | Hạng mục công việc chính | Nguyễn Duy Hào (PO) | Trần Thị Bích Hạnh (SM) | Nguyễn Thị Ngọc Hà (FE) | Bùi Thị Thùy Dương (QA/BE) | 
 | ----- | ----- | ----- | ----- | ----- | 
-| Thu thập yêu cầu & Soạn thảo SRS | **A** | C | C | R | 
-| Thiết kế Kiến trúc phần mềm & CSDL | C | **A** / R | C | R | 
-| Thiết kế Giao diện UI-UX | I | I | **A** / R | C | 
-| Lập trình Giao diện phía Client | I | I | **A** / R | C | 
-| Lập trình API & Xử lý phía Server | R | **A** / R | C | R | 
-| Lập kế hoạch kiểm thử & Đảm bảo chất lượng | C | I | C | **A** / R | 
-| Điều phối quy trình & Theo dõi tiến độ Sprint | C | **A** / R | I | I | 
+| Thu thập yêu cầu, user story và phạm vi sản phẩm | **A** / **R** | **R** | C | C |
+| Soạn thảo và cập nhật Mini-SRS | **A** / **R** | C | **R** | C |
+| Thiết kế kiến trúc EZcli và cơ chế xử lý cục bộ | **A** / **R** | C | C | **R** |
+| Thiết kế giao diện dòng lệnh/tương tác người dùng | C | C | **A** / **R** | **R** |
+| Hiện thực nhận diện context và luồng sinh lệnh | **A** | **R** | C | **R** |
+| Hiện thực giải thích, xác nhận và thực thi lệnh | C | **R** | C | **A** / **R** |
+| Hiện thực lịch sử, tra cứu và quản lý bí danh | C | **R** | **A** / **R** | C |
+| Phân tích an toàn cú pháp và cảnh báo lệnh | C | **R** | C | **A** / **R** |
+| Lập kế hoạch kiểm thử và đảm bảo chất lượng | C | **R** | **R** | **A** / **R** |
+| Điều phối quy trình và theo dõi tiến độ Sprint | C | **A** / **R** | I | I |
+| Kiểm thử nghiệm thu và xác nhận sản phẩm | **A** / **R** | C | **R** | C |
+| Đóng gói, hướng dẫn sử dụng và báo cáo bàn giao | **A** / **R** | **R** | **R** | C |
 
 ### 6.2. Dự toán ngân sách và Chi phí thực hiện
 
 | Danh mục chi phí | Chi tiết hạng mục đầu tư | Số lượng | Đơn giá dự kiến | Thành tiền (VNĐ) | Ghi chú giải trình | 
 | ----- | ----- | ----- | ----- | ----- | ----- | 
-| **Hạ tầng máy chủ (Cloud VPS)** | Máy chủ ảo phục vụ chạy thử nghiệm | 3 tháng | \[Điền đơn giá\] | \[Tính tổng\] | Môi trường Staging và Demo | 
-| **Tên miền (Domain)** | Tên miền định danh cho dự án | 1 năm | \[Điền đơn giá\] | \[Tính tổng\] | Phục vụ truy cập kiểm thử | 
-| **Phần mềm & Dịch vụ hỗ trợ** | GitHub, Trello, công cụ vẽ thiết kế | \- | 0 đ | 0 đ | Sử dụng gói dành cho sinh viên | 
-| **Kinh phí dự phòng rủi ro** | Dự trù in ấn, tài liệu, phát sinh khác | \- | \- | \[Tính tổng\] | Dự trù phát sinh ngoài kế hoạch | 
-| **TỔNG KINH PHÍ DỰ KIẾN** |  |  |  | **\[Tổng kinh phí\] VNĐ** |  | 
+| **Thiết bị phát triển và kiểm thử** | Máy tính cá nhân của các thành viên | 4 thiết bị | 0 đ | 0 đ | Tận dụng thiết bị sẵn có; không phát sinh chi phí thuê hoặc mua mới |
+| **Mô hình và phần mềm mã nguồn mở** | Mô hình xử lý cục bộ, runtime và thư viện cần thiết | 1 bộ | 0 đ | 0 đ | Sử dụng phần mềm/mô hình miễn phí hoặc mã nguồn mở trong phạm vi đồ án |
+| **Công cụ quản lý và thiết kế** | GitHub, công cụ quản lý task và công cụ thiết kế | 1 gói | 0 đ | 0 đ | Sử dụng gói miễn phí hoặc gói dành cho sinh viên |
+| **Hạ tầng máy chủ (Cloud VPS)** | Không sử dụng cho phiên bản EZcli chạy cục bộ | 0 tháng | 0 đ | 0 đ | Không cần máy chủ để xử lý yêu cầu hoặc lưu lịch sử |
+| **Tên miền (Domain)** | Không sử dụng | 0 năm | 0 đ | 0 đ | EZcli không cung cấp website hoặc dịch vụ trực tuyến |
+| **Tài liệu trực tuyến** | Tạo và chia sẻ tài liệu/báo cáo phục vụ nghiệm thu bằng các dịch vụ trực tuyến | 1 gói | 0 đ | 0 đ | Sử dụng dịch vụ trực tuyến miễn phí, không phát sinh chi phí in ấn |
+| **Kinh phí dự phòng rủi ro** | Dự phòng phát sinh trong quá trình hoàn thiện và bàn giao | 1 khoản | 0 đ | 0 đ | Nhóm không dự kiến phát sinh chi phí ngoài các tài nguyên miễn phí |
+| **TỔNG KINH PHÍ DỰ KIẾN** |  |  |  | **0 VNĐ** | Toàn bộ hạng mục sử dụng thiết bị sẵn có và dịch vụ miễn phí |
 
 ## 7. KIỂM NGHIỆM YÊU CẦU & KỊCH BẢN KIỂM THỬ
 
