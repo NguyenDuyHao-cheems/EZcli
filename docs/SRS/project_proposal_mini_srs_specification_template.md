@@ -83,21 +83,21 @@
 ### 3.1. Tổng quan các giải pháp hiện hành trên thị trường
 
 * **Giải pháp thủ công / Bán tự động:** 
-  * Tra cứu lệnh bằng tài liệu trên mạng hoặc hỏi AI:
-    * Khi gặp các câu lệnh phức tạp hoặc ít sử dụng, người dùng thường phải rời khỏi cửa sổ dòng lệnh (Terminal) để tra cứu trên Google, Stack Overflow hoặc dùng các công cụ AI (như ChatGPT, Claude) để tìm kiếm. Điều này này làm gián đoạn mạch làm việc của người dùng, làm tốn thời gian copy-paste câu lệnh qua lại, đồng thời tiềm ẩn rủi ro lộ dữ liệu nhạy cảm khi sao chép các lệnh chứa đường dẫn hay thông số hệ thống nội bộ lên đám mây.
-   * Cấu hình gợi ý lệnh mờ
+  * **Tra cứu lệnh bằng tài liệu trên mạng hoặc hỏi AI**
+    * Khi gặp các câu lệnh phức tạp hoặc ít sử dụng, người dùng thường phải rời khỏi cửa sổ dòng lệnh (Terminal) để tra cứu trên Google, Stack Overflow hoặc dùng các công cụ AI (như ChatGPT, Claude) để tìm kiếm. Điều này này làm gián đoạn mạch làm việc của họ, tốn thời gian copy-paste câu lệnh qua lại, đồng thời tiềm ẩn rủi ro lộ dữ liệu nhạy cảm khi sao chép các lệnh chứa đường dẫn hay thông số hệ thống nội bộ lên đám mây.
+   * **Cấu hình gợi ý lệnh mờ**
      * Người dùng cài đặt công cụ bên thứ ba như fzf để tìm kiếm chuỗi lệnh gần đúng. Mặc dù hỗ trợ tìm lại câu lệnh nhanh hơn, công cụ này chỉ hoạt động trên các lệnh đã từng gõ trong quá khứ, hoàn toàn không thể hỗ trợ sinh lệnh mới.
   
-  * Tạo và quản lý bí danh
+  * **Tạo và quản lý bí danh**
     * Người dùng tự định nghĩa các chuỗi viết tắt cho câu lệnh dài trong tệp cấu hình (.bashrc, .zshrc). Cách này đòi hỏi kỹ năng cấu hình thủ công phức tạp, khó bảo trì/đồng bộ khi danh sách bí danh lớn dần, và người dùng vẫn phải tự nhớ danh sách các bí danh mà mình đã thiết lập.
-  * Tìm trong lịch sử lệnh đã gõ
-    *  Người dùng dựa vào tính năng tra cứu lịch sử mặc định của Shell hoặc các plugin gợi ý. Nhược điểm lớn là dữ liệu lịch sử dễ bị trôi, mất mát khi chuyển đổi môi trường làm việc, tốn thời gian lọc giữa hàng ngàn lệnh cũ và gặp nhiều khó khăn nếu gặp tác vụ chưa từng thực hiện được trước đó.   
+  * **Tìm trong lịch sử lệnh đã gõ**
+    *  Người dùng dựa vào tính năng tra cứu lịch sử mặc định của Shell hoặc các plugin gợi ý. Nhược điểm lớn là dữ liệu lịch sử dễ bị trôi, mất mát khi chuyển đổi môi trường làm việc, tốn thời gian lọc hàng ngàn lệnh cũ và gặp nhiều khó khăn nếu gặp tác vụ chưa từng thực hiện được trước đó.   
 * **Giải pháp thương mại đóng gói sẵn:** 
-  * Warp Terminal: ứng dụng GUI hỗ trợ chat với AI và gõ lệnh trực tiếp trong giao diện.
-    * Trình giả lập thiết bị đầu cuối thế hệ mới tích hợp trợ lý AI . Mặc dù mang lại trải nghiệm tốt cho người dùng khi họ có thể gõ lệnh trực tiếp, nhưng Warp lại yêu cầu kết nối mạng, toàn bộ luồng dữ liệu/truy vấn bắt buộc phải đi qua máy chủ trung gian của Warp (kể cả khi kết nối tới các mô hình AI cục bộ như Ollama/localhost), dẫn đến rủi ro về quyền riêng tư và chi phí duy trì dịch vụ.
-  * Shell GPT: tích hợp lệnh `sgpt` và cờ `-s` hỗ trợ gợi ý lệnh bằng ngôn ngữ tự nhiên.
+  * **Warp Terminal:** ứng dụng GUI hỗ trợ chat với AI và gõ lệnh trực tiếp trong giao diện.
+    * Trình giả lập thiết bị đầu cuối thế hệ mới tích hợp trợ lý AI. Mặc dù mang lại trải nghiệm tốt cho người dùng khi họ có thể gõ lệnh trực tiếp, nhưng Warp lại yêu cầu kết nối mạng, toàn bộ luồng dữ liệu/truy vấn bắt buộc phải đi qua máy chủ trung gian của Warp (kể cả khi kết nối tới các mô hình AI cục bộ như Ollama/localhost), dẫn đến rủi ro về quyền riêng tư và chi phí duy trì dịch vụ.
+  * **Shell GPT:** tích hợp lệnh `sgpt` và cờ `-s` hỗ trợ gợi ý lệnh bằng ngôn ngữ tự nhiên.
     * Công cụ dòng lệnh hỗ trợ sinh lệnh và giải thích thông qua tham số (ví dụ: sgpt --shell). Điểm hạn chế của Shell GPT là phụ thuộc chủ yếu vào OpenAI API trả phí, chưa tối ưu tốt cho các mô hình chạy cục bộ (local models), đồng thời người dùng vẫn phải nhớ các cờ/cú pháp của chính lệnh đó.
-  * LazyGit: Công cụ TUI hỗ trợ quản lý Git trực quan. 
+  * **LazyGit:** Công cụ TUI hỗ trợ quản lý Git trực quan. 
       * Tuy tiện lợi nhưng phạm vi ứng dụng bị bó hẹp hoàn toàn trong các tác vụ Git, không thể hỗ trợ các lệnh hệ thống, thao tác tệp tin hay quản lý quy trình khác. 
 ### 3.2. Bảng phân tích so sánh chi tiết
 
@@ -112,13 +112,13 @@
 
 ### 3.3. Điểm khác biệt & Lợi thế cạnh tranh của giải pháp đề xuất
 
-* Hoạt động Ngoại tuyến & Chi phí 0 đồng: Không phụ thuộc vào kết nối Internet, không lo gián đoạn khi mất mạng và hoàn toàn không phát sinh chi phí hàng tháng cho API như các giải pháp thương mại nhờ khả năng lưu trữ cục bộ. 
+* **Hoạt động ngoại tuyến & tự chủ hoàn toàn:** EZcli được thiết kế để xử lý các chức năng chính trực tiếp trên thiết bị của người dùng, không phụ thuộc vào kết nối Internet. Nhờ đó, người dùng vẫn có thể sử dụng công cụ khi mất mạng hoặc làm việc trong môi trường hạn chế kết nối. Việc sử dụng mô hình và dữ liệu được lưu trữ cục bộ cũng giúp giảm sự phụ thuộc vào các dịch vụ API bên ngoài và không phát sinh chi phí sử dụng API theo từng yêu cầu.
 
-* Không rò rỉ dữ liệu: Toàn bộ quá trình xử lý ngôn ngữ tự nhiên, tra cứu và sinh câu lệnh được thực hiện trực tiếp tại máy tính cá nhân người dùng thông qua mô hình LLM nén nhỏ gọn (4-bit precision). Hệ thống không gửi bất kỳ thông tin nào (đường dẫn tệp, tên người dùng, cấu trúc hệ thống, lịch sử gõ lệnh) lên internet hay máy chủ bên thứ ba. 
+* **Không rò rỉ dữ liệu:** Toàn bộ quá trình xử lý yêu cầu ngôn ngữ tự nhiên và sinh câu lệnh được thực hiện cục bộ trên máy tính của người dùng. Các thông tin liên quan đến môi trường làm việc như đường dẫn thư mục, tên người dùng, hệ điều hành, shell và lịch sử câu lệnh không cần gửi lên máy chủ bên thứ ba. Điều này giúp hạn chế nguy cơ dữ liệu nhạy cảm bị truyền ra ngoài.
 
-* Chủ động phân tích trước khi chạy: Khác với các công cụ tự động thực thi nguy hiểm, ezcli tích hợp phân tích cú pháp tĩnh và hiển thị màu cảnh báo phân cấp (mức độ rủi ro) đối với các lệnh xóa tệp hoặc can thiệp sâu vào quyền hệ thống (rm -rf, chmod, dd,...) nhằm ngăn ngừa việc thực thi nhầm các lệnh phá hủy hệ thống.
+* **Chủ động phân tích trước khi chạy:** EZcli không chỉ chuyển đổi yêu cầu bằng ngôn ngữ tự nhiên thành câu lệnh mà còn thực hiện phân tích cú pháp và kiểm tra an toàn trước khi cho phép thực thi. Hệ thống có thể đưa ra cảnh báo đối với những câu lệnh có khả năng gây ảnh hưởng đến dữ liệu hoặc hệ thống. Người dùng được cung cấp các lựa chọn để xem giải thích, xác nhận thực thi hoặc hủy thao tác, qua đó giảm nguy cơ thực hiện nhầm các câu lệnh không mong muốn.
 
-* Giao diện đẹp mắt, tối ưu hóa trải nghiệm người dùng mà không cần phải tự tay tùy biến quá nhiều.
+* **Giao diện trực quan & tối ưu trải nghiệm người dùng:** EZcli được thiết kế với giao diện dòng lệnh trực quan, sử dụng màu sắc, syntax highlighting, thông báo và cảnh báo rõ ràng để giúp người dùng dễ theo dõi kết quả. Các chức năng như gợi ý câu lệnh, tìm kiếm lịch sử và quản lý bí danh giúp giảm số thao tác phải thực hiện thủ công, đồng thời hạn chế việc người dùng phải tự tùy biến terminal quá nhiều để có được trải nghiệm thuận tiện.
 
 ## 4. GIẢI PHÁP ĐỀ XUẤT & ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS)
 
@@ -234,7 +234,7 @@ EZcli được đóng gói và cài đặt trực tiếp trên máy tính của 
 
 * **Phía Máy chủ:**
 
-    * Không yêu cầu máy chủ. Vì EZcli được thiết kế theo kiến trúc local-first và xử lý trực tiếp trên máy tính của người dùng.
+  * Không yêu cầu máy chủ. Vì EZcli được thiết kế theo kiến trúc local-first và xử lý trực tiếp trên máy tính của người dùng.
 
 * **Phía Người dùng (Client):**
 
