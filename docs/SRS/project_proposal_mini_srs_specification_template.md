@@ -83,16 +83,22 @@
 ### 3.1. Tổng quan các giải pháp hiện hành trên thị trường
 
 * **Giải pháp thủ công / Bán tự động:** 
-  * Tra cứu lệnh bằng tài liệu trên mạng hoặc hỏi AI
-  * Cấu hình gợi ý lệnh mờ
+  * Tra cứu lệnh bằng tài liệu trên mạng hoặc hỏi AI:
+    * Khi gặp các câu lệnh phức tạp hoặc ít sử dụng, người dùng thường phải rời khỏi cửa sổ dòng lệnh (Terminal) để tra cứu trên Google, Stack Overflow hoặc dùng các công cụ AI (như ChatGPT, Claude) để tìm kiếm. Điều này này làm gián đoạn mạch làm việc của người dùng, làm tốn thời gian copy-paste câu lệnh qua lại, đồng thời tiềm ẩn rủi ro lộ dữ liệu nhạy cảm khi sao chép các lệnh chứa đường dẫn hay thông số hệ thống nội bộ lên đám mây.
+   * Cấu hình gợi ý lệnh mờ
+     * Người dùng cài đặt công cụ bên thứ ba như fzf để tìm kiếm chuỗi lệnh gần đúng. Mặc dù hỗ trợ tìm lại câu lệnh nhanh hơn, công cụ này chỉ hoạt động trên các lệnh đã từng gõ trong quá khứ, hoàn toàn không thể hỗ trợ sinh lệnh mới.
+  
   * Tạo và quản lý bí danh
+    * Người dùng tự định nghĩa các chuỗi viết tắt cho câu lệnh dài trong tệp cấu hình (.bashrc, .zshrc). Cách này đòi hỏi kỹ năng cấu hình thủ công phức tạp, khó bảo trì/đồng bộ khi danh sách bí danh lớn dần, và người dùng vẫn phải tự nhớ danh sách các bí danh mà mình đã thiết lập.
   * Tìm trong lịch sử lệnh đã gõ
-
+    *  Người dùng dựa vào tính năng tra cứu lịch sử mặc định của Shell hoặc các plugin gợi ý. Nhược điểm lớn là dữ liệu lịch sử dễ bị trôi, mất mát khi chuyển đổi môi trường làm việc, tốn thời gian lọc giữa hàng ngàn lệnh cũ và gặp nhiều khó khăn nếu gặp tác vụ chưa từng thực hiện được trước đó.   
 * **Giải pháp thương mại đóng gói sẵn:** 
   * Warp Terminal: ứng dụng GUI hỗ trợ chat với AI và gõ lệnh trực tiếp trong giao diện.
+    * Trình giả lập thiết bị đầu cuối thế hệ mới tích hợp trợ lý AI . Mặc dù mang lại trải nghiệm tốt cho người dùng khi họ có thể gõ lệnh trực tiếp, nhưng Warp lại yêu cầu kết nối mạng, toàn bộ luồng dữ liệu/truy vấn bắt buộc phải đi qua máy chủ trung gian của Warp (kể cả khi kết nối tới các mô hình AI cục bộ như Ollama/localhost), dẫn đến rủi ro về quyền riêng tư và chi phí duy trì dịch vụ.
   * Shell GPT: tích hợp lệnh `sgpt` và cờ `-s` hỗ trợ gợi ý lệnh bằng ngôn ngữ tự nhiên.
-
-
+    * Công cụ dòng lệnh hỗ trợ sinh lệnh và giải thích thông qua tham số (ví dụ: sgpt --shell). Điểm hạn chế của Shell GPT là phụ thuộc chủ yếu vào OpenAI API trả phí, chưa tối ưu tốt cho các mô hình chạy cục bộ (local models), đồng thời người dùng vẫn phải nhớ các cờ/cú pháp của chính lệnh đó.
+  * LazyGit: Công cụ TUI hỗ trợ quản lý Git trực quan. 
+      * Tuy tiện lợi nhưng phạm vi ứng dụng bị bó hẹp hoàn toàn trong các tác vụ Git, không thể hỗ trợ các lệnh hệ thống, thao tác tệp tin hay quản lý quy trình khác. 
 ### 3.2. Bảng phân tích so sánh chi tiết
 
 | Tiêu chí so sánh | Hỏi AI trên trình duyệt | Shell GPT (shell_gpt) | Warp Terminal | Giải pháp ezcli đề xuất | 
@@ -106,9 +112,12 @@
 
 ### 3.3. Điểm khác biệt & Lợi thế cạnh tranh của giải pháp đề xuất
 
-* Có thể sử dụng mô hình cục bộ, không cần kết nối Internet hay tốn chi phí API.
-* Dữ liệu cá nhân được xử lý hoàn toàn cục bộ, không rò rỉ dữ liệu ra ngoài.
-* Tích hợp sâu cơ chế bảo vệ an toàn (chạy thử nghiệm và phân tích cú pháp tĩnh) giúp ngăn ngừa việc thực thi nhầm các lệnh phá hủy hệ thống.
+* Hoạt động Ngoại tuyến & Chi phí 0 đồng: Không phụ thuộc vào kết nối Internet, không lo gián đoạn khi mất mạng và hoàn toàn không phát sinh chi phí hàng tháng cho API như các giải pháp thương mại nhờ khả năng lưu trữ cục bộ. 
+
+* Không rò rỉ dữ liệu: Toàn bộ quá trình xử lý ngôn ngữ tự nhiên, tra cứu và sinh câu lệnh được thực hiện trực tiếp tại máy tính cá nhân người dùng thông qua mô hình LLM nén nhỏ gọn (4-bit precision). Hệ thống không gửi bất kỳ thông tin nào (đường dẫn tệp, tên người dùng, cấu trúc hệ thống, lịch sử gõ lệnh) lên internet hay máy chủ bên thứ ba. 
+
+* Chủ động phân tích trước khi chạy: Khác với các công cụ tự động thực thi nguy hiểm, ezcli tích hợp phân tích cú pháp tĩnh và hiển thị màu cảnh báo phân cấp (mức độ rủi ro) đối với các lệnh xóa tệp hoặc can thiệp sâu vào quyền hệ thống (rm -rf, chmod, dd,...) nhằm ngăn ngừa việc thực thi nhầm các lệnh phá hủy hệ thống.
+
 * Giao diện đẹp mắt, tối ưu hóa trải nghiệm người dùng mà không cần phải tự tay tùy biến quá nhiều.
 
 ## 4. GIẢI PHÁP ĐỀ XUẤT & ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS)
@@ -208,35 +217,42 @@
 
 ### 4.5. Kiến trúc tổng thể phần mềm & Công nghệ đề xuất
 
-* **Mô hình kiến trúc phần mềm:** \[Ví dụ: Kiến trúc 3 tầng (3-Tier) hoặc Kiến trúc Client-Server tách biệt giao tiếp qua RESTful API\].
+* **Mô hình kiến trúc phần mềm:** 
+EZcli sử dụng kiến trúc Local-first, trong đó các thành phần chính của hệ thống được thực thi trực tiếp trên máy tính của người dùng, không phụ thuộc vào máy chủ trung gian. Phù hợp với yêu cầu hoạt động ngoại tuyến, xử lý cục bộ và bảo vệ dữ liệu người dùng.
 
-* **Công nghệ phía Giao diện (Frontend):** \[Ví dụ: React.js / Vue.js / Flutter, Tailwind CSS\].
+* **Công nghệ giao diện dòng lệnh (CLI/TUI):** EZcli dự kiến được xây dựng bằng Python CLI, kết hợp Rich để hỗ trợ màu sắc, cảnh báo và syntax highlighting. prompt_toolkit có thể được sử dụng để hỗ trợ nhập liệu tương tác, tự động gợi ý và phím tắt. Nhằm tạo giao diện CLI trực quan và thuận tiện hơn cho người dùng.
 
-* **Công nghệ phía Máy chủ (Backend):** \[Ví dụ: Node.js (Express/NestJS) / Python (FastAPI/Django) / Java Spring Boot\].
+* **Công nghệ xử lý và mô hình AI:**
+EZcli sử dụng mô hình ngôn ngữ chạy cục bộ để chuyển đổi yêu cầu bằng ngôn ngữ tự nhiên thành câu lệnh CLI. Việc chạy mô hình trên thiết bị người dùng giúp hệ thống có thể hoạt động khi không có Internet và hạn chế việc dữ liệu gửi đến dịch vụ bên ngoài.
 
-* **Hệ quản trị Cơ sở dữ liệu:** \[Ví dụ: PostgreSQL / MySQL / MongoDB\].
+* **Lưu trữ dữ liệu:**
+Các dữ liệu như lịch sử câu lệnh, bí danh và cấu hình người dùng được lưu trữ cục bộ trên thiết bị. Giúp EZcli không cần sử dụng cơ sở dữ liệu hoặc máy chủ bên ngoài cho các chức năng chính.
 
-* **Giải pháp triển khai & Hạ tầng:** \[Ví dụ: Đóng gói Docker Container, máy chủ ảo Cloud VPS / Vercel\].
-
+* **Giải pháp triển khai & Hạ tầng:**
+EZcli được đóng gói và cài đặt trực tiếp trên máy tính của người dùng, hỗ trợ các hệ điều hành Windows, Linux và macOS. Hệ thống không yêu cầu Cloud VPS hay máy chủ riêng để xử lý yêu cầu.
 ### 4.6. Yêu cầu môi trường & Phần cứng
 
 * **Phía Máy chủ:**
 
-  * CPU: Tối thiểu 2 vCPU.
-
-  * RAM: Tối thiểu 2 GB - 4 GB.
-
-  * Dung lượng ổ đĩa: Tối thiểu 20 GB SSD.
-
-  * Môi trường thực thi: Linux (Ubuntu Server LTS) có cài đặt môi trường chạy mã nguồn và tường lửa cơ bản.
+    * Không yêu cầu máy chủ. Vì EZcli được thiết kế theo kiến trúc local-first và xử lý trực tiếp trên máy tính của người dùng.
 
 * **Phía Người dùng (Client):**
 
   * Thiết bị: Máy tính cá nhân hoặc điện thoại thông minh.
 
-  * Trình duyệt web hiện đại hỗ trợ HTML5/CSS3/JavaScript (Google Chrome, Edge, Safari, Firefox).
+  * Hệ điều hành: Windows, Linux hoặc macOS.
 
-  * Đường truyền kết nối Internet ổn định.
+  * Shell: Bash, Zsh hoặc PowerShell.
+
+  * CPU: Tối thiểu 4 nhân.
+
+  * RAM: Tối thiểu 4 GB RAM trống (khuyến nghị 8 GB trở lên để mô hình hoạt động ổn định.)
+
+  * Ổ đĩa: Tối thiểu 3 GB dung lượng trống cho chương trình, mô hình SLM và cache.
+  
+  * Internet: Không bắt buộc
+
+  * Quyền hệ thống: EZcli cần quyền phù hợp để thực thi các lệnh mà người dùng yêu cầu; các lệnh có nguy cơ ảnh hưởng hệ thống sẽ được cảnh báo và yêu cầu xác nhận trước khi thực thi.
 
 ## 5. KẾ HOẠCH PHÁT TRIỂN THEO MÔ HÌNH SCRUM
 
