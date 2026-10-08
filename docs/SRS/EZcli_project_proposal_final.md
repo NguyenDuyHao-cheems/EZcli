@@ -16,7 +16,7 @@
 | 1 | 24120306 | **Nguyễn Duy Hào** | **Trưởng nhóm** | 100% |
 | 2 | 24120304 | **Trần Thị Bích Hạnh** | Phát triển & Tài liệu | 100% |
 | 3 | 24120299 | **Nguyễn Thị Ngọc Hà** | TUI / UX | 100% |
-| 4 | 24120044 | **Bùi Thị Thùy Dương** | Kiểm thử & Safety | 100% |
+| 4 | 24120044 | **Bùi Thị Thùy Dương** | Kiểm thử & An toàn | 100% |
 
 ### 1.2. Công cụ và quy trình làm việc
 
@@ -91,7 +91,7 @@ rule an toàn và yêu cầu người dùng xác nhận.
 - TUI.
 - Sinh Bash command từ ngôn ngữ tự nhiên.
 - Nhận diện context cần thiết của môi trường.
-- Safety checking bằng rule/regex.
+- Kiểm tra an toàn bằng rule/regex.
 - Cảnh báo và yêu cầu xác nhận trước khi thực thi.
 - Block các command thuộc nhóm rule được định nghĩa là không cho phép
   thực thi.
@@ -181,11 +181,11 @@ cloud LLM trong phạm vi dự án.
 
 ### 3.3. Điểm khác biệt của EZcli
 
-EZcli tập trung vào ba đặc điểm:
+EZcli tập trung vào 4 đặc điểm:
 
 1. **Local-first:** LLM và các chức năng cốt lõi chạy trên máy người
    dùng thông qua Ollama.
-2. **Safety trước execution:** command được kiểm tra theo rule trước
+2. **Kiểm tra an toàn trước khi thực thi:** command được kiểm tra theo rule trước
    khi thực thi và luôn yêu cầu xác nhận.
 3. **Tích hợp workflow:** người dùng có thể sinh, xem, giải thích, xác
    nhận và thực thi command ngay trong TUI.
@@ -225,7 +225,7 @@ EZcli tập trung vào ba đặc điểm:
 
 | Mã | Nhóm | Yêu cầu | Phương pháp kiểm chứng |
 | :---: | :--- | :--- | :--- |
-| `NFR-01` | Hiệu năng | Hệ thống **target** thời gian sinh command ≤ 1 giây đối với request điển hình/đơn giản trên _reference environment_. Request phức tạp có thể mất nhiều thời gian hơn. | Đo thời gian từ lúc gửi request đến khi command được trả về trên tập input được định nghĩa trước. |
+| `NFR-01` | Hiệu năng | Hệ thống **đặt mục tiêu** thời gian sinh command ≤ 1 giây đối với request điển hình/đơn giản trên _reference environment_. Request phức tạp có thể mất nhiều thời gian hơn. | Đo thời gian từ lúc gửi request đến khi command được trả về trên tập input được định nghĩa trước. |
 | `NFR-02` | Local processing | Core command generation và safety checking được xử lý cục bộ; không sử dụng cloud LLM. | Kiểm tra cấu hình/runtime và network dependency của core flow. |
 | `NFR-03` | Safety | Safety checker phải phát hiện các command thuộc tập rule **nguy hiểm** đã định nghĩa. | Unit/integration tests trên safety rule dataset. |
 | `NFR-04` | Execution safety | Mọi command đều yêu cầu confirmation trước execution; command thuộc nhóm `blocked` không được execute. | Integration test với safe, warning và blocked command. |
@@ -253,7 +253,7 @@ _Mỗi kịch bản mô tả luồng chính và các trường hợp rẽ nhánh
 4. TUI hiển thị command được sinh.
 5. Safety checker kiểm tra command.
 6. TUI hiển thị kết quả kiểm tra và các hành động khả dụng.
-7. Người dùng chọn thực thi.
+7. Người dùng chọn hành động: thực thi.
 8. EZcli yêu cầu confirmation.
 9. Nếu được xác nhận, command được thực thi qua Bash.
 10. EZcli hiển thị stdout/stderr và execution status.
@@ -261,10 +261,8 @@ _Mỗi kịch bản mô tả luồng chính và các trường hợp rẽ nhánh
 
 **Rẽ nhánh / Ngoại lệ:**
 
-- **7b**:Người dùng chọn **Giải thích** → hiển thị giải thích command, sau đó
-  quay lại màn hình hành động.
-- **7c**:Người dùng chọn **Hủy** → không execute và trả quyền điều khiển cho
-  TUI.
+- **7b**: Người dùng chọn hành động **Giải thích** → hiển thị giải thích command, sau đó quay lại màn hình hành động.
+- **7c**: Người dùng chọn hành động **Hủy** → không execute và trả quyền điều khiển cho TUI.
 - Safety checker trả về `warning` → hiển thị cảnh báo và yêu cầu
   confirmation.
 - Safety checker trả về `blocked` → không cho phép execute.
@@ -381,7 +379,7 @@ MVP.
 | `N-01` | `STK-01`, `STK-02` | `FR-01`, `FR-02`, `FR-09` | `SC-01` | `TC-01`, `TC-02` |
 | `N-02` | `STK-01`, `STK-02` | `FR-03`, `FR-04`, `FR-05` | `SC-01` | `TC-03` |
 | `N-03` | `STK-01`, `STK-02` | `FR-06`, `FR-07`, `FR-08` | `SC-02` | `TC-04` |
-| `N-04` | `STK-03`, `STK-04` | `NFR-01` -- `NFR-08` | `SC-01`, `SC-02` | `TC-05`, `TC-06` |
+| `N-04`| `STK-03`, `STK-04` | `NFR-01` -- `NFR-08` | `SC-01`, `SC-02` | `TC-02`, `TC-03`, `TC-05`, `TC-06` |
 | `N-05` | `STK-02` | `FR-10`, `FR-11` | `SC-02` | `TC-07`, `TC-08` (nếu triển khai) |
 
 ## 6. KẾ HOẠCH NHÂN SỰ & NGÂN SÁCH DỰ KIẾN
