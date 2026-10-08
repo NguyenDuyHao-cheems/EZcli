@@ -314,10 +314,10 @@ EZcli được đóng gói và cài đặt trực tiếp trên máy tính của 
 
 | Mã nhu cầu | Bên liên quan | Mã yêu cầu (FR/NFR) | Mã kịch bản | Mã kiểm thử | Sprint thực hiện | Mã yêu cầu thay đổi | 
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | 
-| `N-01` | STK-01 | `FR-01`, `NFR-02` | `SC-01` | `TC-01` | Sprint 1 | \- | 
-| `N-02` | STK-01 | `FR-02`, `FR-03` | `SC-01` | `TC-02` | Sprint 2 | \- | 
-| `N-03` | STK-02 | `FR-04`, `FR-05` | `SC-02` | `TC-03` | Sprint 2 | \- | 
-| `N-04` | STK-03 | `FR-06`, `FR-09` | `SC-03` | `TC-04` | Sprint 3 | `CR-01` (nếu có) | 
+| `N-01` | STK-01 | `FR-01`, `FR-07`, `NFR-01` | `SC-01` | `TC-01` | Sprint 1, 2 | \- | 
+| `N-02` | STK-01, STK-02 | `FR-02`, `FR-03`, `FR-08`, `NFR-02` | `SC-01` | `TC-02`, `TC-04` | Sprint 2, 3 | \- | 
+| `N-03` | STK-02 | `FR-04`, `FR-05`, `FR-06` | `SC-02` | `TC-03`, `TC-04` | Sprint 3 | \- | 
+| `N-04` | STK-04 | `NFR-03`, `NFR-04` | (Phủ toàn hệ thống) | `TC-05` | Sprint 4 | \- | 
 
 ## 6. KẾ HOẠCH NHÂN SỰ & NGÂN SÁCH DỰ KIẾN
 
@@ -373,6 +373,8 @@ EZcli được đóng gói và cài đặt trực tiếp trên máy tính của 
 
 | Mã kiểm thử | Liên kết yêu cầu | Mục đích kiểm thử | Dữ liệu đầu vào giả định | Kết quả mong đợi từ hệ thống | 
 | ----- | ----- | ----- | ----- | ----- | 
-| `TC-01` | `FR-01`, `NFR-02` | Kiểm tra phản hồi bảo mật khi nhập sai thông tin xác thực | Nhập sai mật khẩu liên tiếp quá 5 lần | Hệ thống từ chối đăng nhập, hiển thị thông báo khóa tạm thời và ghi nhật ký cảnh báo. | 
-| `TC-02` | `FR-02`, `FR-03` | Kiểm tra ràng buộc dữ liệu tại giá trị biên | Nhập dữ liệu vượt quá giới hạn cho phép | Hệ thống hiển thị cảnh báo lỗi cụ thể tại ô nhập liệu, không cho phép gửi yêu cầu. | 
-| `TC-03` | `NFR-01` | Đo lường thời gian phản hồi khi chịu tải đồng thời | Gửi 50 yêu cầu đồng thời đến hệ thống trong 30 giây | 100% yêu cầu được xử lý thành công với thời gian phản hồi $\le 1.5$ giây. | 
+| `TC-01` | `FR-01`, `FR-07`, `NFR-01` | Kiểm tra sinh lệnh chính xác từ ngữ cảnh hệ thống và đo thời gian suy luận. | Nhập yêu cầu: "list files in current directory". | Hệ thống trả về lệnh hợp lệ (VD: `ls -la`) dựa theo hệ điều hành đang dùng; thời gian phản hồi $\le 2.0$ giây. | 
+| `TC-02` | `FR-08`, `FR-03`, `NFR-02` | Phân tích an toàn cú pháp và chặn lệnh phá hoại cục bộ. | Nhập yêu cầu sinh lệnh xóa toàn bộ ổ đĩa: "delete everything on root". | Hệ thống sinh lệnh xóa (`rm -rf /`) nhưng lập tức tô màu đỏ, cảnh báo nguy hiểm dữ liệu và bắt buộc người dùng chọn [A] Hủy hoặc xác nhận. | 
+| `TC-03` | `FR-05`, `FR-06` | Kiểm tra tìm kiếm mờ lịch sử và ghi nhớ bí danh mới. | Nhập từ khóa mờ để tra lịch sử hoặc gõ trùng tên bí danh hiện có. | Hệ thống trả về lệnh quá khứ gần khớp nhất; cảnh báo ghi đè bí danh nếu trùng tên và lưu bí danh mới thành công. | 
+| `TC-04` | `FR-02`, `FR-04` | Kiểm tra chức năng giải thích tham số và tra cứu mẫu lệnh. | Chọn [D] để giải thích lệnh `tar -xzf` hoặc tìm kiếm mẫu dùng lệnh `docker`. | Hệ thống in ra màn hình bảng bóc tách ý nghĩa từng tham số của `tar` hoặc trả về danh sách ví dụ mẫu của `docker` (từ tldr). |
+| `TC-05` | `NFR-03`, `NFR-04` | Đánh giá độ tương thích đa nền tảng và hiển thị giao diện đồ họa CLI. | Chạy ứng dụng trên PowerShell (Windows) chế độ Dark mode, thực hiện 1 vòng đời sinh lệnh hoàn chỉnh. | Không xảy ra lỗi sập ứng dụng (crash), các nút bấm và màu sắc ANSI (xanh/đỏ/vàng) hiển thị chuẩn xác không bị vỡ định dạng. |
