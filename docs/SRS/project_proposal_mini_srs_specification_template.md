@@ -1,4 +1,4 @@
-# PROJECT PROPOSAL
+# PROJECT PROPOSAL (deprecated)
 
 > **Môn học:** Nhập môn Công nghệ Phần mềm
 >

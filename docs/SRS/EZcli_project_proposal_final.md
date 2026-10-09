@@ -1,4 +1,4 @@
-# PROJECT PROPOSAL
+# PROJECT PROPOSAL (deprecated)
 
 > **Môn học:** Nhập môn Công nghệ Phần mềm\
 > **Đơn vị:** Bộ môn Công nghệ Phần mềm -- Khoa Công nghệ Thông tin,
