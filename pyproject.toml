@@ -1,0 +1,63 @@
+[project]
+name = "ezcli"
+version = "0.0.1"
+requires-python = ">=3.12"
+dependencies = [
+    "textual",
+    "typer",
+]
+
+[project.scripts]
+ezcli = "ezcli.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mkdocs>=1.6.1",
+    "mypy>=2.3.1",
+    "pre-commit>=4.6.2",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.12",
+    "rumdl>=0.2.77",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "tests"]
+strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["ezcli"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 0
+
+[tool.rumdl]
+disable = ["MD013"]
+
+[tool.rumdl.per-file-ignores]
+".github/pull_request_template.md" = ["MD041"]
+"docs/markdown_review.md" = ["MD014"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
