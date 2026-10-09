@@ -148,30 +148,27 @@ When opening a pull request, try to make the reviewer’s job easy:
 
 ## Merging pull requests
 
-The `main` branch is protected.
+The `main` branch is the primary integration branch.
 
-Before a pull request can be merged:
+Before merging a pull request:
 
-- the branch must be up to date with `main`,
-- the `Quality checks` CI check must pass,
-- review conversations must be resolved.
+- review the proposed changes,
+- check that the changes are consistent with the project architecture,
+- run the relevant local quality checks,
+- resolve review conversations when applicable.
 
-This repository uses merge commits. On GitHub, choose:
+The repository uses merge commits. On GitHub, choose:
 
 ```text
 Create a merge commit
 ```
 
-Merge commits preserve the focused commits from the branch and make the pull
-request boundary visible in the project history. Squash merging and rebase
-merging are disabled to keep that history consistent.
+Merge commits preserve the commits from the branch and make the pull request boundary visible in the project history.
 
-After a pull request is merged, GitHub deletes its remote branch automatically.
-Delete the corresponding local branch after updating `main`.
+After a pull request is merged, delete the remote branch if it is no longer needed. Delete the corresponding local branch after updating `main`.
 
-When relevant documentation files change, the separate `Documentation`
-workflow publishes the reviewed site after the merge. This deployment is not a
-pull request check and does not replace the required `Quality checks` status.
+When relevant documentation files change, the separate `Documentation` workflow builds and deploys the documentation site after changes are pushed to `main`. This workflow does not replace the `Quality checks` workflow.
+
 
 ## Documentation terminology
 
@@ -212,7 +209,7 @@ uv run ruff check .
 uv run ruff format --check .
 uv run rumdl check .
 uv run mkdocs build --strict
-uv run pytest --cov=text_toolkit --cov-report=term-missing
+uv run pytest --cov=ezcli --cov-report=term-missing
 uv run mypy
 uv build --no-sources
 ```
