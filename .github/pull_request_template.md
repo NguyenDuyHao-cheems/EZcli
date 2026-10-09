@@ -1,3 +1,5 @@
+# Pull Request
+
 ## Summary
 
 Briefly describe what this pull request changes.
@@ -24,11 +26,16 @@ Select the most relevant option.
 
 ## Checklist
 
-- [ ] The change is small and focused
-- [ ] The pull request title is clear
-- [ ] I updated documentation if needed
-- [ ] I added or updated tests if needed
-- [ ] I ran local checks if applicable
+- [ ] The change is small and focused.
+- [ ] The pull request title is clear and descriptive.
+- [ ] I updated documentation if needed.
+- [ ] I added or updated tests if needed.
+- [ ] I ran relevant local checks, if applicable.
+- [ ] I reviewed the changes before requesting review.
+
+## Testing
+
+Describe the checks performed and their results. If no checks were run, explain why.
 
 ## Notes
 
