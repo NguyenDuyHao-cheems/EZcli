@@ -32,9 +32,9 @@ sgpt --shell "find all json files in current folder"
 - gợi ý lệnh mờ trong quá khứ kế thừa fzf
 - autosuggestion autocompletion kế thừa zsh-autosuggest
 - hỗ trợ alias tự động và quản lí alias
-- 
+-
 ## NFR
-- xác nhận trước khi thực thi 
+- xác nhận trước khi thực thi
 - bảo mật riêng tư lịch sử lệnh
 - cross-platform, sp đa dạng shell
 - câu lệnh sinh ra chính xác không bị hallucination
@@ -48,14 +48,14 @@ sgpt --shell "find all json files in current folder"
 	- duy trì bộ nhớ phiên làm việc (3-5 câu lệnh + output trước đó)
 - hightlight syntax
 - local-first
-- an toàn 
+- an toàn
 	- hightlight warning tuy mức độ, phân tích cú pháp tĩnh
 	- sử dụng rag + kho dữ liệu có sẵn tldr-pages/cheat.sh
 	- chạy dry run
-- 
-	
+-
+
 ## So sánh với các solution khác
-### hỏi ai model rồi copy paste 
+### hỏi ai model rồi copy paste
 
 | citeria  | ezcli              | ai                 |
 | -------- | ------------------ | ------------------ |
@@ -84,9 +84,9 @@ sgpt --shell "find all json files in current folder"
 - phải gõ lệnh sai rồi ms sửa
 - tự động chạy lệnh đã sửa
 ### lazygit
-- bó hẹp trong phạm vi git 
+- bó hẹp trong phạm vi git
 - tui
-- 
+-
 
 ---
 ## triết lí
@@ -96,23 +96,23 @@ sgpt --shell "find all json files in current folder"
 ### khó khăn
 - an toàn khó khi AI sinh ảo giác, lệnh kh tồn tại hoặc lệnh nguy hiểm -> hightlight warning tuy mức độ, phân tích cú pháp tĩnh
 	- sử dụng rag + kho dữ liệu có sẵn tldr-pages/cheat.sh
-	- 
-- độ trễ cao nếu dùng model kh phù hợp -> finetune model 4b, chuyển sang precision 4bit 
+	-
+- độ trễ cao nếu dùng model kh phù hợp -> finetune model 4b, chuyển sang precision 4bit
 	- tách sinh lệnh và sinh explain (chỉ sinh khi user yêu cầu )
 	- lưu cache
-	
+
 ## backlog nice to have
 ### fr1-hỗ trợ api model cloud như openai
 - **Tầng lọc và làm sạch dữ liệu tự động trước khi gửi:** Tích hợp bộ quét biểu thức chính quy và nhận diện thực thể ngay tại máy khách. Toàn bộ các chuỗi có định dạng mã khóa bảo mật, mật khẩu trong chuỗi kết nối, địa chỉ IP mạng nội bộ hay đường dẫn chứa tên người dùng thực sẽ bị thay thế bằng các giá trị giả lập trước khi dữ liệu rời khỏi máy tính.
-    
+
 - **Chính sách ưu tiên xử lý nội bộ:** Thiết lập chế độ mặc định xử lý hoàn toàn ngoại tuyến trên máy người dùng. Hệ thống chỉ cho phép gửi yêu cầu lên các dịch vụ đám mây khi người dùng chủ động bật tính năng này cho các yêu cầu phức tạp, đi kèm thông báo rõ ràng về các gói tin chuẩn bị được gửi đi.
-    
+
 - **Giao thức không lưu vết với nhà cung cấp dịch vụ:** Cấu hình các kết nối đám mây thông qua các đầu mối dịch vụ có cam kết không lưu trữ dữ liệu truyền tải để phục vụ huấn luyện mô hình, đồng thời hủy bỏ toàn bộ phiên làm việc ngay sau khi trả lời hoàn tất.
-- **routing** giữa model local và cloud 
+- **routing** giữa model local và cloud
 - nén context
 ### fr2-tích hợp sâu bằng hotkey
 ### fr3-sửa lỗi thông minh
 
 ---
 ## inbox
-- jc mayhelp 
+- jc mayhelp
