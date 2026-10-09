@@ -1,4 +1,3 @@
-
 """Tests for the application service."""
 
 from pathlib import Path
@@ -36,9 +35,7 @@ def test_prepare_command_returns_safe_result(tmp_path: Path) -> None:
 def test_prepare_command_blocks_dangerous_command(
     tmp_path: Path,
 ) -> None:
-    service = CommandService(
-        history_store=HistoryStore(tmp_path / "history.json")
-    )
+    service = CommandService(history_store=HistoryStore(tmp_path / "history.json"))
     generated = GeneratedCommand(
         prompt="delete files",
         command="rm -rf /tmp/example",

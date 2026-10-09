@@ -59,9 +59,7 @@ class OllamaClient:
             with urlopen(request, timeout=self._timeout) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
-            raise LLMError(
-                f"Ollama returned HTTP error {exc.code}."
-            ) from exc
+            raise LLMError(f"Ollama returned HTTP error {exc.code}.") from exc
         except (URLError, TimeoutError, OSError) as exc:
             raise LLMError(
                 "Could not connect to Ollama. Check that Ollama is running."
