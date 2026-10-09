@@ -169,7 +169,6 @@ After a pull request is merged, delete the remote branch if it is no longer need
 
 When relevant documentation files change, the separate `Documentation` workflow builds and deploys the documentation site after changes are pushed to `main`. This workflow does not replace the `Quality checks` workflow.
 
-
 ## Documentation terminology
 
 Use the official spelling of tool names: `uv`, pytest, mypy, `rumdl`, and

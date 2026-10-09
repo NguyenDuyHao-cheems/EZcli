@@ -80,18 +80,18 @@
 * **Giải pháp thủ công / Bán tự động:**
   * **Tra cứu lệnh bằng tài liệu trên mạng hoặc hỏi AI**
     * Khi gặp các câu lệnh phức tạp hoặc ít sử dụng, người dùng thường phải rời khỏi cửa sổ dòng lệnh (Terminal) để tra cứu trên Google, Stack Overflow hoặc dùng các công cụ AI (như ChatGPT, Claude) để tìm kiếm. Điều này này làm gián đoạn mạch làm việc của họ, tốn thời gian copy-paste câu lệnh qua lại, đồng thời tiềm ẩn rủi ro lộ dữ liệu nhạy cảm khi sao chép các lệnh chứa đường dẫn hay thông số hệ thống nội bộ lên đám mây.
-   * **Cấu hình gợi ý lệnh mờ**
-     * Người dùng cài đặt công cụ bên thứ ba như fzf để tìm kiếm chuỗi lệnh gần đúng. Mặc dù hỗ trợ tìm lại câu lệnh nhanh hơn, công cụ này chỉ hoạt động trên các lệnh đã từng gõ trong quá khứ, hoàn toàn không thể hỗ trợ sinh lệnh mới.
-
+  * **Cấu hình gợi ý lệnh mờ**
+    * Người dùng cài đặt công cụ bên thứ ba như fzf để tìm kiếm chuỗi lệnh gần đúng. Mặc dù hỗ trợ tìm lại câu lệnh nhanh hơn, công cụ này chỉ hoạt động trên các lệnh đã từng gõ trong quá khứ, hoàn toàn không thể hỗ trợ sinh lệnh mới.
   * **Tạo và quản lý bí danh**
     * Người dùng tự định nghĩa các chuỗi viết tắt cho câu lệnh dài trong tệp cấu hình (.bashrc, .zshrc). Cách này đòi hỏi kỹ năng cấu hình thủ công phức tạp, khó bảo trì/đồng bộ khi danh sách bí danh lớn dần, và người dùng vẫn phải tự nhớ danh sách các bí danh mà mình đã thiết lập.
   * **Tìm trong lịch sử lệnh đã gõ**
-    *  Người dùng dựa vào tính năng tra cứu lịch sử mặc định của Shell hoặc các plugin gợi ý. Nhược điểm lớn là dữ liệu lịch sử dễ bị trôi, mất mát khi chuyển đổi môi trường làm việc, tốn thời gian lọc hàng ngàn lệnh cũ và gặp nhiều khó khăn nếu gặp tác vụ chưa từng thực hiện được trước đó.  
+    * Người dùng dựa vào tính năng tra cứu lịch sử mặc định của Shell hoặc các plugin gợi ý. Nhược điểm lớn là dữ liệu lịch sử dễ bị trôi, mất mát khi chuyển đổi môi trường làm việc, tốn thời gian lọc hàng ngàn lệnh cũ và gặp nhiều khó khăn nếu gặp tác vụ chưa từng thực hiện được trước đó.  
 * **Giải pháp thương mại đóng gói sẵn:**
   * **Warp Terminal:** ứng dụng GUI hỗ trợ chat với AI và gõ lệnh trực tiếp trong giao diện.
     * Trình giả lập thiết bị đầu cuối thế hệ mới tích hợp trợ lý AI. Mặc dù mang lại trải nghiệm tốt cho người dùng khi họ có thể gõ lệnh trực tiếp, nhưng Warp lại yêu cầu kết nối mạng, toàn bộ luồng dữ liệu/truy vấn bắt buộc phải đi qua máy chủ trung gian của Warp (kể cả khi kết nối tới các mô hình AI cục bộ như Ollama/localhost), dẫn đến rủi ro về quyền riêng tư và chi phí duy trì dịch vụ.
   * **Shell GPT:** tích hợp lệnh `sgpt` và cờ `-s` hỗ trợ gợi ý lệnh bằng ngôn ngữ tự nhiên.
     * *Công cụ dòng lệnh* hỗ trợ sinh lệnh và giải thích thông qua tham số (ví dụ: sgpt --shell). Điểm hạn chế của Shell GPT là chưa tối ưu tốt cho các mô hình chạy cục bộ (local models), đồng thời người dùng vẫn phải nhớ các cờ/cú pháp của chính lệnh đó.
+
 ### 3.2. Bảng phân tích so sánh chi tiết
 
 | Tiêu chí so sánh | Hỏi AI trên trình duyệt | Shell GPT (shell_gpt) | Warp Terminal | Giải pháp ezcli đề xuất |
@@ -141,11 +141,10 @@
 
 | Mã yêu cầu | Nhóm chất lượng        | Tiêu chí kỹ thuật định lượng                                                                                                                                          | Phương pháp kiểm chứng                                                                                                                 |     |
 | ---------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| `NFR-01`   | **Hiệu năng **         | Thời gian sinh câu lệnh từ văn bản tự nhiên $\le 1.0$ giây khi chạy LLM cục bộ trên cấu hình máy tính tiêu chuẩn  (mô hình 3B tham số, máy 4GB VRAM)                  | Đo đạc tự động thời gian phản hồi (từ khi gửi yêu cầu đến khi in kết quả) bằng script kiểm thử với tập 100 câu lệnh đầu vào khác nhau. |     |
-| `NFR-02`   | **Bảo mật & An toàn ** | 100% dữ liệu xử lý cục bộ không truyền ra internet. Nhận diện và cảnh báo thành công 100% các câu lệnh phá hoại (vd: `rm -rf /`, `mkfs`) bằng phân tích cú pháp tĩnh. | Chạy thử nghiệm tập 50 lệnh nguy hiểm (Malicious Dataset) để kiểm chứng cơ chế cảnh báo.                                               |     |
-| `NFR-03`   | **Tương thích **       | Tỷ lệ sập ứng dụng  $\le 1\%$. Lệnh sinh ra tương thích 100% trên 3 môi trường shell mục tiêu: Bash, Zsh (Linux/macOS) và PowerShell (Windows).                       | Thực thi 200 lượt test tự động trên máy ảo của 3 hệ điều hành tương ứng để xác nhận lệnh sinh ra chạy hợp lệ, không lỗi cú pháp shell. |     |
+| `NFR-01`   | **Hiệu năng**         | Thời gian sinh câu lệnh từ văn bản tự nhiên $\le 1.0$ giây khi chạy LLM cục bộ trên cấu hình máy tính tiêu chuẩn  (mô hình 3B tham số, máy 4GB VRAM)                  | Đo đạc tự động thời gian phản hồi (từ khi gửi yêu cầu đến khi in kết quả) bằng script kiểm thử với tập 100 câu lệnh đầu vào khác nhau. |     |
+| `NFR-02`   | **Bảo mật & An toàn** | 100% dữ liệu xử lý cục bộ không truyền ra internet. Nhận diện và cảnh báo thành công 100% các câu lệnh phá hoại (vd: `rm -rf /`, `mkfs`) bằng phân tích cú pháp tĩnh. | Chạy thử nghiệm tập 50 lệnh nguy hiểm (Malicious Dataset) để kiểm chứng cơ chế cảnh báo.                                               |     |
+| `NFR-03`   | **Tương thích**       | Tỷ lệ sập ứng dụng  $\le 1\%$. Lệnh sinh ra tương thích 100% trên 3 môi trường shell mục tiêu: Bash, Zsh (Linux/macOS) và PowerShell (Windows).                       | Thực thi 200 lượt test tự động trên máy ảo của 3 hệ điều hành tương ứng để xác nhận lệnh sinh ra chạy hợp lệ, không lỗi cú pháp shell. |     |
 | `NFR-04`   | **Độ thân thiện**      | Hỗ trợ theme light & dark.  Người dùng không cần phải ấn 1 chỗ nhiều lần mới tìm được giao diện mình cần.                                                             | Có nút chuyển light & dark mode. Các nút bấm không phân quá 3 cấp                                                                      |     |
-
 
 ### 4.4. Đặc tả kịch bản sử dụng
 
@@ -176,7 +175,6 @@
 * **Luồng rẽ nhánh / Ngoại lệ:**
 
   * *Rẽ nhánh tại bước 5 (Người dùng chọn D):* Hệ thống hiển thị bảng bóc tách ý nghĩa từng tham số của lệnh, sau đó quay lại menu ba lựa chọn.
-
   * *Rẽ nhánh tại bước 5 (Người dùng chọn A):* Hệ thống hủy bỏ câu lệnh và trả quyền điều khiển về dòng lệnh thông thường.
   * *Rẽ nhánh tại bước 5 (Người dùng chọn M):* cho phép người dùng sửa đổi lệnh và hiển thị lại menu lựa chọn bên dưới.
   * *Ngoại lệ tại bước 3 (Phát hiện lệnh nguy hiểm):* Hệ thống đổi màu cảnh báo nổi bật và yêu cầu xác nhận thêm một bước trước khi cho phép bấm thực thi.
@@ -230,6 +228,7 @@ Các dữ liệu được lưu trữ cục bộ trên thiết bị. Dùng địn
 
 * **Giải pháp triển khai & Hạ tầng:**
 EZcli được đóng gói và cài đặt trực tiếp trên máy tính của người dùng, hỗ trợ các hệ điều hành Windows, Linux và macOS.
+
 ### 4.6. Yêu cầu môi trường & Phần cứng
 
 * **Phía Máy chủ:**
@@ -249,7 +248,9 @@ EZcli được đóng gói và cài đặt trực tiếp trên máy tính của 
   * RAM: Tối thiểu 4 GB RAM trống (khuyến nghị 8 GB trở lên để mô hình hoạt động ổn định.)
 
   * Ổ đĩa: Tối thiểu 3 GB dung lượng trống cho chương trình, mô hình SLM và cache.
-  - VRAM: 4GB (đối với macOS thì yêu cầu ram > 4GB)
+
+  * VRAM: 4GB (đối với macOS thì yêu cầu ram > 4GB)
+
   * Internet: Không bắt buộc
 
   * Quyền hệ thống: EZcli cần quyền phù hợp để thực thi các lệnh mà người dùng yêu cầu; các lệnh có nguy cơ ảnh hưởng hệ thống sẽ được cảnh báo và yêu cầu xác nhận trước khi thực thi.
