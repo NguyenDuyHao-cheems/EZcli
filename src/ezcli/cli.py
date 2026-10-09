@@ -2,16 +2,18 @@
 
 import typer
 
+from ezcli.tui import run
+
 app = typer.Typer(
     name="ezcli",
-    help="A command-line tool for working with text.",
+    help="A local assistant for generating Bash commands.",
 )
 
 
-@app.command()
+@app.callback(invoke_without_command=True)
 def main() -> None:
-    """Display a welcome message."""
-    typer.echo("Welcome to EZcli!")
+    """Launch the interactive terminal interface."""
+    run()
 
 
 if __name__ == "__main__":
