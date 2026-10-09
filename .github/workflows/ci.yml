@@ -1,4 +1,3 @@
-```yaml
 name: CI
 
 on:
@@ -45,4 +44,3 @@ jobs:
 
       - name: Build distributions
         run: uv build --no-sources
-```
