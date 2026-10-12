@@ -5,6 +5,15 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from ezcli.domain.models import GeneratedCommand
+from ezcli.llm.client import LLMClient
+from ezcli.llm.result import LLMResult
+
+__all__ = [
+    "LLMClient",
+    "LLMError",
+    "LLMResult",
+    "OllamaClient",
+]
 
 
 class LLMError(RuntimeError):
