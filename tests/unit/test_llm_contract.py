@@ -1,114 +1,68 @@
 """Contract and specification tests for the LLM client interface."""
 
-import pytest
-
+from ezcli.domain.models import GeneratedCommand
+from ezcli.llm import GeneratedCommand as PublicGeneratedCommand
 from ezcli.llm import LLMClient as PublicLLMClient
-from ezcli.llm import LLMResult as PublicLLMResult
 from ezcli.llm.client import LLMClient
-from ezcli.llm.result import LLMResult
 
 
 class FakeLLMClient:
     """Simple client used to verify interface conformance."""
 
-    def generate(self, prompt: str) -> LLMResult:
-        return LLMResult(
-            success=True,
-            content=f"Response to: {prompt}",
+    def generate(
+        self,
+        prompt: str,
+        context: dict[str, str] | None = None,
+    ) -> GeneratedCommand:
+        return GeneratedCommand(
+            prompt=prompt,
+            command="ls -la",
         )
 
 
 class MockLLMClient:
     """Provide deterministic responses for tests."""
 
-    def __init__(self, result: LLMResult) -> None:
+    def __init__(self, result: GeneratedCommand) -> None:
         self._result = result
         self.last_prompt: str | None = None
+        self.last_context: dict[str, str] | None = None
 
-    def generate(self, prompt: str) -> LLMResult:
+    def generate(
+        self,
+        prompt: str,
+        context: dict[str, str] | None = None,
+    ) -> GeneratedCommand:
         self.last_prompt = prompt
+        self.last_context = context
         return self._result
 
 
 def test_public_module_exports() -> None:
-    """LLMClient and LLMResult can be imported from the public ezcli.llm module."""
+    """The public module exports the command model and client protocol."""
+    assert PublicGeneratedCommand is GeneratedCommand
     assert PublicLLMClient is LLMClient
-    assert PublicLLMResult is LLMResult
 
 
 def test_client_satisfies_contract() -> None:
     client: LLMClient = FakeLLMClient()
 
-    result = client.generate("Hello")
+    result = client.generate("list files", {"current_directory": "/tmp"})
 
-    assert result.success is True
-    assert result.content == "Response to: Hello"
-    assert result.error is None
+    assert result == GeneratedCommand(prompt="list files", command="ls -la")
 
 
-def test_failed_result_has_error() -> None:
-    result = LLMResult(
-        success=False,
-        content="",
-        error="Connection failed.",
-    )
-
-    assert result.success is False
-    assert result.content == ""
-    assert result.error is not None
-
-
-def test_successful_result_has_no_error() -> None:
-    result = LLMResult(
-        success=True,
-        content="Hello",
-    )
-
-    assert result.success is True
-    assert result.error is None
-
-
-def test_mock_client_satisfies_contract_and_records_prompt() -> None:
-    expected_result = LLMResult(
-        success=True,
-        content="Dependency injection is a design technique.",
+def test_mock_client_satisfies_contract_and_records_request() -> None:
+    expected_result = GeneratedCommand(
+        prompt="Explain dependency injection.",
+        command="echo explanation",
     )
     mock: LLMClient = MockLLMClient(expected_result)
+    context = {"shell": "bash"}
 
-    result = mock.generate("Explain dependency injection.")
+    result = mock.generate("Explain dependency injection.", context)
 
     assert result == expected_result
-    assert getattr(mock, "last_prompt") == "Explain dependency injection."
-
-
-def test_invariant_success_with_error_raises_error() -> None:
-    with pytest.raises(ValueError, match="When success is True, error must be None."):
-        LLMResult(
-            success=True,
-            content="Some output",
-            error="Unexpected error",
-        )
-
-
-def test_invariant_failure_without_error_raises_error() -> None:
-    with pytest.raises(
-        ValueError,
-        match="When success is False, error must contain an error message.",
-    ):
-        LLMResult(
-            success=False,
-            content="",
-            error=None,
-        )
-
-
-def test_invariant_failure_with_content_raises_error() -> None:
-    with pytest.raises(
-        ValueError,
-        match="When success is False, content must be an empty string.",
-    ):
-        LLMResult(
-            success=False,
-            content="Unexpected content",
-            error="Something went wrong.",
-        )
+    assert isinstance(mock, MockLLMClient)
+    assert mock.last_prompt == "Explain dependency injection."
+    assert mock.last_context == context
