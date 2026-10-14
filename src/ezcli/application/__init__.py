@@ -12,7 +12,7 @@ from ezcli.domain.models import (
     SafetyResult,
 )
 from ezcli.history import HistoryStore
-from ezcli.llm import OllamaClient
+from ezcli.llm import LLMClient, OllamaClient
 from ezcli.safety import check_command
 
 
@@ -29,7 +29,7 @@ class CommandService:
 
     def __init__(
         self,
-        llm_client: OllamaClient | None = None,
+        llm_client: LLMClient | None = None,
         history_store: HistoryStore | None = None,
     ) -> None:
         self._llm_client = llm_client or OllamaClient()
@@ -40,7 +40,7 @@ class CommandService:
     def prepare_command(self, prompt: str) -> PreparedCommand:
         """Generate a command and assess its safety without executing it."""
         context = collect_context()
-        generated = self._llm_client.generate_command(prompt, context)
+        generated = self._llm_client.generate(prompt, context)
         safety = check_command(generated.command)
 
         return PreparedCommand(

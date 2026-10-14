@@ -5,6 +5,14 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from ezcli.domain.models import GeneratedCommand
+from ezcli.llm.client import LLMClient
+
+__all__ = [
+    "GeneratedCommand",
+    "LLMClient",
+    "LLMError",
+    "OllamaClient",
+]
 
 
 class LLMError(RuntimeError):
@@ -24,7 +32,7 @@ class OllamaClient:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
 
-    def generate_command(
+    def generate(
         self,
         prompt: str,
         context: dict[str, str] | None = None,

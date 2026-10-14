@@ -19,23 +19,23 @@ def mock_response(payload: dict[str, Any]) -> MagicMock:
     return response
 
 
-def test_generate_command_success() -> None:
+def test_generate_success() -> None:
     client = OllamaClient()
     response = mock_response({"response": "ls -la"})
 
     with patch("ezcli.llm.urlopen", return_value=response) as mocked_urlopen:
-        result = client.generate_command("list files")
+        result = client.generate("list files")
 
     assert result == GeneratedCommand(prompt="list files", command="ls -la")
     mocked_urlopen.assert_called_once()
 
 
-def test_generate_command_sends_context() -> None:
+def test_generate_sends_context() -> None:
     client = OllamaClient()
     response = mock_response({"response": "pwd"})
 
     with patch("ezcli.llm.urlopen", return_value=response) as mocked_urlopen:
-        client.generate_command(
+        client.generate(
             "show current directory",
             context={"current_directory": "/tmp"},
         )
@@ -52,7 +52,7 @@ def test_empty_prompt_is_rejected() -> None:
     client = OllamaClient()
 
     with pytest.raises(ValueError, match="Prompt must not be empty"):
-        client.generate_command("   ")
+        client.generate("   ")
 
 
 def test_connection_error_raises_llm_error() -> None:
@@ -63,7 +63,7 @@ def test_connection_error_raises_llm_error() -> None:
         side_effect=OSError("connection failed"),
     ):
         with pytest.raises(LLMError, match="Could not connect"):
-            client.generate_command("list files")
+            client.generate("list files")
 
 
 def test_empty_response_raises_llm_error() -> None:
@@ -72,7 +72,7 @@ def test_empty_response_raises_llm_error() -> None:
 
     with patch("ezcli.llm.urlopen", return_value=response):
         with pytest.raises(LLMError, match="empty command"):
-            client.generate_command("list files")
+            client.generate("list files")
 
 
 def test_invalid_json_raises_llm_error() -> None:
@@ -83,4 +83,4 @@ def test_invalid_json_raises_llm_error() -> None:
 
     with patch("ezcli.llm.urlopen", return_value=response):
         with pytest.raises(LLMError, match="invalid response"):
-            client.generate_command("list files")
+            client.generate("list files")

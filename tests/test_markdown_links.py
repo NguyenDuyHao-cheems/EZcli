@@ -26,7 +26,10 @@ def active_markdown_lines(path: Path) -> list[tuple[int, str]]:
     active_lines: list[tuple[int, str]] = []
     fence: tuple[str, int] | None = None
 
-    for line_number, line in enumerate(path.read_text().splitlines(), start=1):
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
         match = FENCE_PATTERN.match(line)
 
         if match:
