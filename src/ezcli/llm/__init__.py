@@ -6,12 +6,15 @@ from urllib.request import Request, urlopen
 
 from ezcli.domain.models import GeneratedCommand
 from ezcli.llm.client import LLMClient
+from ezcli.llm.mock import LLMResult, MockLLMProvider
 
 __all__ = [
     "GeneratedCommand",
     "LLMClient",
     "LLMError",
     "OllamaClient",
+    "MockLLMProvider",
+    "LLMResult",
 ]
 
 

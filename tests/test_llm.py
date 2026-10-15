@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ezcli.domain.models import GeneratedCommand
-from ezcli.llm import LLMError, OllamaClient
+from ezcli.llm import LLMError, LLMResult, MockLLMProvider, OllamaClient
 
 
 def mock_response(payload: dict[str, Any]) -> MagicMock:
@@ -84,3 +84,27 @@ def test_invalid_json_raises_llm_error() -> None:
     with patch("ezcli.llm.urlopen", return_value=response):
         with pytest.raises(LLMError, match="invalid response"):
             client.generate("list files")
+
+
+# --- MockLLMProvider Tests ---
+
+
+def test_mock_success_flow() -> None:
+    """Kiểm tra luồng sinh nội dung thành công với Mock theo chuẩn contract."""
+    provider = MockLLMProvider()
+    result: LLMResult = provider.generate_command("find json files", context={})
+
+    assert result.success is True
+    assert result.content is not None
+    assert "find" in result.content
+    assert result.error is None
+
+
+def test_mock_error_handling() -> None:
+    """Kiểm tra Mock trả về lỗi rõ ràng trong LLMResult theo chuẩn contract."""
+    provider = MockLLMProvider()
+    result: LLMResult = provider.generate_command("trigger error", context={})
+
+    assert result.success is False
+    assert result.error is not None
+    assert result.content == ""

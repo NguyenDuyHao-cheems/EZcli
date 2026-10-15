@@ -1,4 +1,4 @@
-"""Textual terminal interface for EZcli."""
+"""Textual terminal interface for EZcli using Mock LLM Provider."""
 
 from textual import work
 from textual.app import App, ComposeResult
@@ -7,15 +7,23 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from ezcli.application import CommandService, PreparedCommand
-from ezcli.domain.models import SafetyLevel
+from ezcli.domain.models import GeneratedCommand, SafetyLevel
 from ezcli.execution import execute_command
+from ezcli.llm.mock import MockLLMProvider
+
+
+class SimpleSafetyAssessment:
+    """Lớp đơn giản tương thích mức an toàn."""
+    def __init__(self, level: SafetyLevel, reasons: list[str]) -> None:
+        self.level = level
+        self.reasons = reasons
 
 
 class EZcliApp(App[None]):
-    """Interactive terminal interface for EZcli."""
+    """Interactive terminal interface for EZcli with Mock support."""
 
     TITLE = "EZcli"
-    SUB_TITLE = "Local Bash Command Assistant"
+    SUB_TITLE = "Local Bash Command Assistant (Mock Mode)"
 
     CSS = """
     Screen {
@@ -41,6 +49,7 @@ class EZcliApp(App[None]):
     def __init__(self) -> None:
         super().__init__()
         self.service = CommandService()
+        self.mock_provider = MockLLMProvider()
         self._prepared: PreparedCommand | None = None
 
     def compose(self) -> ComposeResult:
@@ -92,14 +101,36 @@ class EZcliApp(App[None]):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Generate a command when Enter is pressed in the input."""
-        if event.input.id == "prompt" and event.value.strip():
-            self._generate(event.value.strip())
+        prompt = event.value.strip()
+        if prompt:
+            self._prepared = None
+            self.query_one("#execute", Button).disabled = True
+            self._generate(prompt)
 
     @work(thread=True)
     def _generate(self, prompt: str) -> None:
-        """Generate and assess a command without executing it."""
+        """Generate a command using MockLLMProvider."""
         try:
-            prepared = self.service.prepare_command(prompt)
+            res = self.mock_provider.generate_command(prompt)
+
+            if not res.success or res.error:
+                self.app.call_from_thread(
+                    self._show_error,
+                    f"[Lỗi]: {res.error}"
+                )
+                return
+
+            prepared = PreparedCommand(
+                generated=GeneratedCommand(
+                    prompt=prompt,
+                    command=res.command or "echo 'No command'",
+                ),
+                safety=SimpleSafetyAssessment(
+                    level=SafetyLevel.SAFE,
+                    reasons=[res.explanation] if res.explanation else []
+                )
+            )
+
             self.app.call_from_thread(self._show_result, prepared)
         except Exception as exc:
             self.app.call_from_thread(
@@ -143,11 +174,14 @@ class EZcliApp(App[None]):
             confirmed=True,
         )
 
-        self.service.record_outcome(
-            prepared,
-            status=result.status,
-            exit_code=result.exit_code,
-        )
+        try:
+            self.service.record_outcome(
+                prepared,
+                status=result.status,
+                exit_code=result.exit_code,
+            )
+        except Exception:
+            pass
 
         self.query_one("#result", Static).update(
             f"Trạng thái: {result.status.value}\n"
