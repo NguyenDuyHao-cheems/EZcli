@@ -40,7 +40,11 @@ class CommandService:
     def prepare_command(self, prompt: str) -> PreparedCommand:
         """Generate a command and assess its safety without executing it."""
         context = collect_context()
-        generated = self._llm_client.generate(prompt, context)
+        result = self._llm_client.generate(prompt, context)
+        if not result.success:
+            raise RuntimeError(result.error)
+
+        generated = GeneratedCommand(prompt=prompt, command=result.content)
         safety = check_command(generated.command)
 
         return PreparedCommand(
