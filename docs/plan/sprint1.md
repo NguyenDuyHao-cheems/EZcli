@@ -101,9 +101,25 @@ uv run mypy
 Success: no issues found in 22 source files
 
 uv run pytest
-33 passed in 0.31s
+34 passed in 0.31s
 ```
 
-Chưa thực hiện kiểm thử tích hợp với Ollama thật; bước tiếp theo là khởi động
-Ollama, bảo đảm model `qwen2.5-coder:3b` đã có, rồi kiểm tra endpoint
-`/api/chat`.
+Đã kiểm thử tích hợp với Ollama thật bằng model `qwen2.5-coder:3b`. Endpoint
+`/api/chat` phản hồi thành công với `message.role=assistant` và
+`message.content`, xác nhận đường đi thành công của adapter.
+
+### Lưu ý sau kiểm thử tích hợp
+
+- Model có thể trả command trong Markdown code fence, ví dụ
+  ```` ```bash ... ``` ```` thay vì chỉ trả command thuần. Adapter hiện ánh xạ
+  đúng `message.content`, nhưng output cần được chuẩn hóa trước khi thực thi
+  thật.
+- System message nên tiếp tục yêu cầu model trả về duy nhất Bash command;
+  đồng thời cần cân nhắc bước loại bỏ code fence trước safety check. Command
+  vẫn phải đi qua safety check trước khi được thực thi.
+- Timeout hiện được cấu hình qua constructor, ví dụ
+  `OllamaClient(timeout=60.0)`. Timeout mặc định vẫn là 30 giây. Nếu cần cấu
+  hình từ biến môi trường hoặc file cấu hình, đó sẽ là công việc mở rộng tiếp
+  theo.
+- Kiểm thử tích hợp xác nhận kết nối và ánh xạ response, nhưng không thay thế
+  cho unit tests vì phụ thuộc vào Ollama, model và tài nguyên máy.
