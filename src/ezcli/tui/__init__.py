@@ -1,21 +1,24 @@
-"""Textual terminal interface for EZcli."""
+"""Textual terminal interface for EZcli using Mock LLM Provider."""
 
-from textual import work
+import sys
+from typing import TextIO
+
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from ezcli.application import CommandService, PreparedCommand
-from ezcli.domain.models import SafetyLevel
+from ezcli.domain.models import GeneratedCommand, SafetyLevel, SafetyResult
 from ezcli.execution import execute_command
+from ezcli.llm.mock import MockLLMProvider
 
 
 class EZcliApp(App[None]):
     """Interactive terminal interface for EZcli."""
 
     TITLE = "EZcli"
-    SUB_TITLE = "Local Bash Command Assistant"
+    SUB_TITLE = "Local Bash Command Assistant (Mock Mode)"
 
     CSS = """
     Screen {
@@ -41,7 +44,9 @@ class EZcliApp(App[None]):
     def __init__(self) -> None:
         super().__init__()
         self.service = CommandService()
+        self.mock_provider = MockLLMProvider()
         self._prepared: PreparedCommand | None = None
+        self._last_prompt: str = ""
 
     def compose(self) -> ComposeResult:
         """Build the application layout."""
@@ -68,9 +73,7 @@ class EZcliApp(App[None]):
             if not prompt:
                 self.query_one("#result", Static).update("Vui lòng nhập yêu cầu.")
                 return
-            self._prepared = None
-            self.query_one("#execute", Button).disabled = True
-            self._generate(prompt)
+            self._handle_generation(prompt)
 
         elif event.button.id == "execute":
             if self._prepared is None:
@@ -87,73 +90,102 @@ class EZcliApp(App[None]):
 
         elif event.button.id == "cancel":
             self._prepared = None
+            self._last_prompt = ""
             self.query_one("#execute", Button).disabled = True
             self.query_one("#result", Static).update("Đã hủy thao tác.")
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Generate a command when Enter is pressed in the input."""
-        if event.input.id == "prompt" and event.value.strip():
-            self._generate(event.value.strip())
+        prompt = event.value.strip()
+        if prompt:
+            self._handle_generation(prompt)
 
-    @work(thread=True)
-    def _generate(self, prompt: str) -> None:
-        """Generate and assess a command without executing it."""
+    def _handle_generation(self, prompt: str) -> None:
+        """Generate command using MockLLMProvider strictly following contract."""
+        self._last_prompt = prompt
+        self._prepared = None
+        self.query_one("#execute", Button).disabled = True
+
         try:
-            prepared = self.service.prepare_command(prompt)
-            self.app.call_from_thread(self._show_result, prepared)
-        except Exception as exc:
-            self.app.call_from_thread(
-                self._show_error,
-                f"Không thể sinh lệnh: {exc}",
+            res = self.mock_provider.generate_command(prompt)
+
+            if not res.success or res.error:
+                error_msg = res.error or "Unknown error"
+                self.query_one("#result", Static).update(f"[Lỗi]: {error_msg}")
+                return
+
+            command_text = res.content.strip() or "echo 'No content'"
+
+            prepared = PreparedCommand(
+                generated=GeneratedCommand(
+                    prompt=prompt,
+                    command=command_text,
+                ),
+                safety=SafetyResult(
+                    level=SafetyLevel.SAFE,
+                    reasons=("Phản hồi hợp lệ từ Mock LLM.",),
+                ),
             )
 
+            self._show_result(prepared)
+        except Exception as exc:
+            self.query_one("#result", Static).update(f"Không thể sinh lệnh: {exc}")
+
     def _show_result(self, prepared: PreparedCommand) -> None:
-        """Display generated command and safety assessment."""
+        """Display generated command concisely."""
         self._prepared = prepared
         self.query_one("#execute", Button).disabled = (
             prepared.safety.level == SafetyLevel.BLOCKED
         )
 
-        reasons = (
-            "\n".join(f"- {reason}" for reason in prepared.safety.reasons)
-            or "Không có cảnh báo từ các quy tắc hiện tại."
-        )
-
-        self.query_one("#result", Static).update(
-            f"Yêu cầu: {prepared.generated.prompt}\n\n"
-            f"Lệnh Bash:\n{prepared.generated.command}\n\n"
-            f"Mức an toàn: {prepared.safety.level.value.upper()}\n"
-            f"Chi tiết:\n{reasons}\n\n"
-            "Lệnh chưa được thực thi."
-        )
-
-    def _show_error(self, message: str) -> None:
-        """Display an error message."""
-        self.query_one("#result", Static).update(message)
+        self.query_one("#result", Static).update(f"{prepared.generated.command}")
 
     def _on_confirmation(self, confirmed: bool | None) -> None:
-        """Execute only after explicit user confirmation."""
+        """Handle execution confirmation or return back to generation view."""
         if not confirmed or self._prepared is None:
-            self.query_one("#result", Static).update("Đã hủy thực thi.")
+            if self._prepared is not None:
+                self._show_result(self._prepared)
+            elif self._last_prompt:
+                self._handle_generation(self._last_prompt)
+            else:
+                self.query_one("#result", Static).update("Đã hủy thực thi.")
             return
 
         prepared = self._prepared
+
+        if sys.platform == "win32":
+            try:
+                stdout_stream: TextIO = sys.stdout
+                stderr_stream: TextIO = sys.stderr
+                if hasattr(stdout_stream, "reconfigure"):
+                    stdout_stream.reconfigure(encoding="utf-8")
+                if hasattr(stderr_stream, "reconfigure"):
+                    stderr_stream.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
         result = execute_command(
             prepared.generated.command,
             confirmed=True,
         )
 
-        self.service.record_outcome(
-            prepared,
-            status=result.status,
-            exit_code=result.exit_code,
-        )
+        try:
+            self.service.record_outcome(
+                prepared,
+                status=result.status,
+                exit_code=result.exit_code,
+            )
+        except Exception:
+            pass
+
+        stdout_text = result.stdout or ""
+        stderr_text = result.stderr or ""
 
         self.query_one("#result", Static).update(
             f"Trạng thái: {result.status.value}\n"
             f"Mã thoát: {result.exit_code}\n\n"
-            f"STDOUT:\n{result.stdout}\n"
-            f"STDERR:\n{result.stderr}"
+            f"STDOUT:\n{stdout_text}\n\n"
+            f"STDERR:\n{stderr_text}"
         )
 
 

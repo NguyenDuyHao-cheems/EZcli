@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
-from ezcli.llm import LLMResult, OllamaClient
+from ezcli.llm import LLMResult, MockLLMProvider, OllamaClient
 
 
 def mock_response(payload: dict[str, Any]) -> MagicMock:
@@ -133,3 +133,27 @@ def test_invalid_json_returns_failure_result() -> None:
         content="",
         error="Ollama returned an invalid response.",
     )
+
+
+# --- MockLLMProvider Tests ---
+
+
+def test_mock_success_flow() -> None:
+    """Kiểm tra luồng sinh nội dung thành công với Mock theo chuẩn contract."""
+    provider = MockLLMProvider()
+    result: LLMResult = provider.generate_command("find json files", context={})
+
+    assert result.success is True
+    assert result.content is not None
+    assert "find" in result.content
+    assert result.error is None
+
+
+def test_mock_error_handling() -> None:
+    """Kiểm tra Mock trả về lỗi rõ ràng trong LLMResult theo chuẩn contract."""
+    provider = MockLLMProvider()
+    result: LLMResult = provider.generate_command("trigger error", context={})
+
+    assert result.success is False
+    assert result.error is not None
+    assert result.content == ""

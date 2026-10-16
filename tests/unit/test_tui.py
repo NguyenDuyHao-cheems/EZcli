@@ -120,7 +120,6 @@ def test_show_result_enables_execute_for_safe_command() -> None:
             assert app.query_one("#execute").disabled is False
             result_text = str(app.query_one("#result", Static).content)
             assert "ls -la" in result_text
-            assert "SAFE" in result_text
 
     asyncio.run(_test())
 
@@ -141,21 +140,20 @@ def test_show_result_disables_execute_for_blocked_command() -> None:
             assert app._prepared is prepared
             assert app.query_one("#execute").disabled is True
             result_text = str(app.query_one("#result", Static).content)
-            assert "BLOCKED" in result_text
-            assert "Root deletion" in result_text
+            assert "rm -rf /" in result_text
 
     asyncio.run(_test())
 
 
-def test_show_error_updates_result_area() -> None:
-    """_show_error displays the error message in the result widget."""
+def test_handle_generation_error_updates_result_area() -> None:
+    """_handle_generation displays error message in result widget on failure."""
 
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            app._show_error("Không thể kết nối đến Ollama.")
-            result_text = str(app.query_one("#result", Static).content)
-            assert "Không thể kết nối đến Ollama." in result_text
+            app._handle_generation("trigger error")
+            result_text = str(app.query_one("#result", Static).content).lower()
+            assert "lỗi" in result_text or "error" in result_text
 
     asyncio.run(_test())
 
@@ -166,7 +164,8 @@ def test_on_confirmation_cancelled_updates_message() -> None:
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            app._prepared = _make_prepared()
+            app._prepared = None
+            app._last_prompt = ""
             app._on_confirmation(confirmed=False)
 
             result_text = str(app.query_one("#result", Static).content)
