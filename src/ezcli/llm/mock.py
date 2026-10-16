@@ -1,20 +1,7 @@
 """Mock LLM Provider cho ezcli."""
 
 from typing import Any
-
-
-class LLMResult:
-    """Kết quả trả về từ Mock LLM Provider."""
-
-    def __init__(
-        self,
-        success: bool = True,
-        content: str = "",
-        error: str | None = None,
-    ) -> None:
-        self.success = success
-        self.content = content
-        self.error = error
+from ezcli.llm.result import LLMResult
 
 
 class MockLLMProvider:
