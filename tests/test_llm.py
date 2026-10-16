@@ -1,14 +1,12 @@
-"""Tests for the Ollama client."""
+"""Tests for the Ollama chat client."""
 
 import json
 from http.client import HTTPResponse
 from typing import Any
 from unittest.mock import MagicMock, patch
+from urllib.error import URLError
 
-import pytest
-
-from ezcli.domain.models import GeneratedCommand
-from ezcli.llm import LLMError, OllamaClient
+from ezcli.llm import LLMResult, OllamaClient
 
 
 def mock_response(payload: dict[str, Any]) -> MagicMock:
@@ -21,18 +19,25 @@ def mock_response(payload: dict[str, Any]) -> MagicMock:
 
 def test_generate_success() -> None:
     client = OllamaClient()
-    response = mock_response({"response": "ls -la"})
+    response = mock_response(
+        {"message": {"role": "assistant", "content": "ls -la"}}
+    )
 
     with patch("ezcli.llm.urlopen", return_value=response) as mocked_urlopen:
         result = client.generate("list files")
 
-    assert result == GeneratedCommand(prompt="list files", command="ls -la")
-    mocked_urlopen.assert_called_once()
+    assert result == LLMResult(success=True, content="ls -la")
+    request = mocked_urlopen.call_args.args[0]
+    assert request.full_url.endswith("/api/chat")
 
 
-def test_generate_sends_context() -> None:
+
+def test_generate_sends_chat_messages_and_context() -> None:
+
     client = OllamaClient()
-    response = mock_response({"response": "pwd"})
+    response = mock_response(
+        {"message": {"role": "assistant", "content": "pwd"}}
+    )
 
     with patch("ezcli.llm.urlopen", return_value=response) as mocked_urlopen:
         client.generate(
@@ -43,44 +48,105 @@ def test_generate_sends_context() -> None:
     request = mocked_urlopen.call_args.args[0]
     payload = json.loads(request.data.decode("utf-8"))
 
+    assert request.full_url.endswith("/api/chat")
     assert payload["model"] == "qwen2.5-coder:3b"
     assert payload["stream"] is False
-    assert "/tmp" in payload["prompt"]
+    assert payload["messages"][0]["role"] == "system"
+    assert "/tmp" in payload["messages"][1]["content"]
+
+
+def test_generate_uses_configured_timeout() -> None:
+    client = OllamaClient(timeout=12.5)
+    response = mock_response(
+        {"message": {"role": "assistant", "content": "pwd"}}
+    )
+
+    with patch("ezcli.llm.urlopen", return_value=response) as mocked_urlopen:
+        client.generate("show current directory")
+
+    assert mocked_urlopen.call_args.kwargs["timeout"] == 12.5
+
+
+def test_generate_uses_thirty_second_default_timeout() -> None:
+    client = OllamaClient()
+    response = mock_response(
+        {"message": {"role": "assistant", "content": "pwd"}}
+    )
+
+    with patch("ezcli.llm.urlopen", return_value=response) as mocked_urlopen:
+        client.generate("show current directory")
+
+    assert mocked_urlopen.call_args.kwargs["timeout"] == 30.0
 
 
 def test_empty_prompt_is_rejected() -> None:
     client = OllamaClient()
 
-    with pytest.raises(ValueError, match="Prompt must not be empty"):
+
+    try:
         client.generate("   ")
+    except ValueError as exc:
+        assert str(exc) == "Prompt must not be empty."
+    else:
+        raise AssertionError("Expected empty prompt to be rejected")
 
 
-def test_connection_error_raises_llm_error() -> None:
+
+def test_connection_error_returns_failure_result() -> None:
     client = OllamaClient()
 
     with patch(
         "ezcli.llm.urlopen",
-        side_effect=OSError("connection failed"),
+        side_effect=URLError("connection failed"),
     ):
-        with pytest.raises(LLMError, match="Could not connect"):
-            client.generate("list files")
+
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert result.content == ""
+    assert result.error == "Could not connect to Ollama. Check that Ollama is running."
 
 
-def test_empty_response_raises_llm_error() -> None:
+
+def test_timeout_returns_failure_result() -> None:
+    client = OllamaClient(timeout=7.0)
+
+    with patch("ezcli.llm.urlopen", side_effect=TimeoutError()):
+        result = client.generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama request timed out after 7 seconds.",
+    )
+
+
+def test_empty_response_returns_failure_result() -> None:
     client = OllamaClient()
-    response = mock_response({"response": "  "})
+    response = mock_response({"message": {"content": "  "}})
 
     with patch("ezcli.llm.urlopen", return_value=response):
-        with pytest.raises(LLMError, match="empty command"):
-            client.generate("list files")
+
+        result = client.generate("list files")
 
 
-def test_invalid_json_raises_llm_error() -> None:
+    assert result.success is False
+    assert result.error == "Ollama returned empty assistant content."
+
+
+def test_invalid_json_returns_failure_result() -> None:
     client = OllamaClient()
     response = MagicMock(spec=HTTPResponse)
     response.__enter__.return_value = response
     response.read.return_value = b"not valid json"
 
     with patch("ezcli.llm.urlopen", return_value=response):
-        with pytest.raises(LLMError, match="invalid response"):
-            client.generate("list files")
+
+        result = client.generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama returned an invalid response.",
+    )
+
