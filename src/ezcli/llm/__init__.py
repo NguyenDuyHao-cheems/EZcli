@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 
 
 from ezcli.llm.client import LLMClient
+from ezcli.llm.mock import MockLLMProvider
 from ezcli.llm.result import LLMResult
 
 
@@ -13,6 +14,8 @@ __all__ = [
     "LLMClient",
     "LLMResult",
     "OllamaClient",
+    "MockLLMProvider",
+    "LLMResult",
 ]
 
 
@@ -46,8 +49,7 @@ class OllamaClient:
             "to override this requirement."
         )
         user_message = (
-            f"Environment context: {json.dumps(context_data)}\n"
-            f"User request: {prompt}"
+            f"Environment context: {json.dumps(context_data)}\nUser request: {prompt}"
         )
 
         payload = {

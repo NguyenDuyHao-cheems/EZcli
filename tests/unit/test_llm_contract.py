@@ -1,11 +1,9 @@
 """Contract and specification tests for the LLM client interface."""
 
-
 from ezcli.llm import LLMClient as PublicLLMClient
 from ezcli.llm import LLMResult as PublicLLMResult
 from ezcli.llm.client import LLMClient
 from ezcli.llm.result import LLMResult
-
 
 
 class FakeLLMClient:
@@ -15,15 +13,12 @@ class FakeLLMClient:
         self,
         prompt: str,
         context: dict[str, str] | None = None,
-
     ) -> LLMResult:
         return LLMResult(success=True, content="ls -la")
 
 
-
 class MockLLMClient:
     """Provide deterministic responses for tests."""
-
 
     def __init__(self, result: LLMResult) -> None:
 
@@ -35,7 +30,6 @@ class MockLLMClient:
         self,
         prompt: str,
         context: dict[str, str] | None = None,
-
     ) -> LLMResult:
 
         self.last_prompt = prompt
@@ -44,7 +38,6 @@ class MockLLMClient:
 
 
 def test_public_module_exports() -> None:
-
     """The public module exports the result model and client protocol."""
     assert PublicLLMResult is LLMResult
 
@@ -55,7 +48,6 @@ def test_client_satisfies_contract() -> None:
     client: LLMClient = FakeLLMClient()
 
     result = client.generate("list files", {"current_directory": "/tmp"})
-
 
     assert result == LLMResult(success=True, content="ls -la")
 
