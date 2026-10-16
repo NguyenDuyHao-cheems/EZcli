@@ -24,7 +24,9 @@ def test_prepare_command_returns_safe_result(tmp_path: Path) -> None:
     with patch.object(
         service._llm_client,
         "generate",
+
         return_value=LLMResult(success=True, content=generated.command),
+
     ) as mock_generate:
         prepared = service.prepare_command("list files")
 
@@ -45,7 +47,9 @@ def test_prepare_command_blocks_dangerous_command(
     with patch.object(
         service._llm_client,
         "generate",
+
         return_value=LLMResult(success=True, content=generated.command),
+
     ):
         prepared = service.prepare_command("delete files")
 
@@ -63,7 +67,9 @@ def test_record_outcome_saves_history(tmp_path: Path) -> None:
     with patch.object(
         service._llm_client,
         "generate",
+
         return_value=LLMResult(success=True, content=generated.command),
+
     ):
         prepared = service.prepare_command("list files")
 

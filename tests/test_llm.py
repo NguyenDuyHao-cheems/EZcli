@@ -31,7 +31,9 @@ def test_generate_success() -> None:
     assert request.full_url.endswith("/api/chat")
 
 
+
 def test_generate_sends_chat_messages_and_context() -> None:
+
     client = OllamaClient()
     response = mock_response(
         {"message": {"role": "assistant", "content": "pwd"}}
@@ -80,12 +82,14 @@ def test_generate_uses_thirty_second_default_timeout() -> None:
 def test_empty_prompt_is_rejected() -> None:
     client = OllamaClient()
 
+
     try:
         client.generate("   ")
     except ValueError as exc:
         assert str(exc) == "Prompt must not be empty."
     else:
         raise AssertionError("Expected empty prompt to be rejected")
+
 
 
 def test_connection_error_returns_failure_result() -> None:
@@ -95,11 +99,13 @@ def test_connection_error_returns_failure_result() -> None:
         "ezcli.llm.urlopen",
         side_effect=URLError("connection failed"),
     ):
+
         result = client.generate("list files")
 
     assert result.success is False
     assert result.content == ""
     assert result.error == "Could not connect to Ollama. Check that Ollama is running."
+
 
 
 def test_timeout_returns_failure_result() -> None:
@@ -120,7 +126,9 @@ def test_empty_response_returns_failure_result() -> None:
     response = mock_response({"message": {"content": "  "}})
 
     with patch("ezcli.llm.urlopen", return_value=response):
+
         result = client.generate("list files")
+
 
     assert result.success is False
     assert result.error == "Ollama returned empty assistant content."
@@ -133,6 +141,7 @@ def test_invalid_json_returns_failure_result() -> None:
     response.read.return_value = b"not valid json"
 
     with patch("ezcli.llm.urlopen", return_value=response):
+
         result = client.generate("list files")
 
     assert result == LLMResult(
@@ -140,3 +149,4 @@ def test_invalid_json_returns_failure_result() -> None:
         content="",
         error="Ollama returned an invalid response.",
     )
+

@@ -2,6 +2,7 @@
 
 [plan](https://chatgpt.com/s/t_6ac8bb9786ac81918a563724d69641ad)
 
+
 # 12/10/2026 Chốt contract LLMClient và LLMResult
 
 ## Báo cáo rà soát và thực hiện lại Sprint 1
@@ -74,6 +75,7 @@ prompt + context
 Luồng lỗi từ Ollama vẫn được báo bằng `LLMError`, để application/TUI có thể
 hiển thị lỗi và không thực thi command khi LLM không khả dụng.
 
+
 # 15/10/2026 Triển khai adapter Ollama /api/chat
 
 ### Đã thực hiện
@@ -123,3 +125,4 @@ uv run pytest
   theo.
 - Kiểm thử tích hợp xác nhận kết nối và ánh xạ response, nhưng không thay thế
   cho unit tests vì phụ thuộc vào Ollama, model và tài nguyên máy.
+

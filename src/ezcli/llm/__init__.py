@@ -4,8 +4,10 @@ import json
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+
 from ezcli.llm.client import LLMClient
 from ezcli.llm.result import LLMResult
+
 
 __all__ = [
     "LLMClient",
