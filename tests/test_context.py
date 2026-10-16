@@ -82,3 +82,29 @@ def test_collect_context_does_not_crash_when_helpers_fail(
     assert "current_directory" in context
     assert "shell" in context
     assert "operating_system" in context
+
+
+def test_get_current_directory_fallback_to_root_on_home_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _fail() -> Path:
+        raise OSError("failed")
+
+    monkeypatch.setattr(Path, "cwd", _fail)
+    monkeypatch.setattr(Path, "home", _fail)
+    assert get_current_directory() == Path(".")
+
+
+def test_environment_context_immutability_and_dict() -> None:
+    from ezcli.context import EnvironmentContext, get_environment_context
+
+    ctx = get_environment_context()
+    assert isinstance(ctx, EnvironmentContext)
+    assert isinstance(ctx.current_directory, str)
+    assert isinstance(ctx.operating_system, str)
+    assert isinstance(ctx.shell, str)
+
+    as_dict = ctx.to_dict()
+    assert as_dict["current_directory"] == ctx.current_directory
+    assert as_dict["shell"] == ctx.shell
+    assert as_dict["operating_system"] == ctx.operating_system
