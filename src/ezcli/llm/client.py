@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from ezcli.domain.models import GeneratedCommand
+from ezcli.llm.result import LLMResult
 
 
 class LLMClient(Protocol):
@@ -12,6 +12,7 @@ class LLMClient(Protocol):
         self,
         prompt: str,
         context: dict[str, str] | None = None,
-    ) -> GeneratedCommand:
-        """Generate a Bash command from a prompt and optional shell context."""
+    ) -> LLMResult:
+        """Generate a Bash command result from a prompt and shell context."""
+
         ...

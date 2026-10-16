@@ -1,4 +1,4 @@
-"""Mock-based unit tests for the OllamaClient (Ollama HTTP adapter).
+"""Mock-based unit tests for the OllamaClient (Ollama HTTP chat adapter).
 
 All tests run entirely offline — no real Ollama process is required.
 ``urlopen`` is patched at the ``ezcli.llm`` import path so that the adapter
@@ -14,8 +14,7 @@ from urllib.error import HTTPError, URLError
 
 import pytest
 
-from ezcli.domain.models import GeneratedCommand
-from ezcli.llm import LLMError, OllamaClient
+from ezcli.llm import LLMResult, OllamaClient
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -43,34 +42,34 @@ _PATCH_TARGET = "ezcli.llm.urlopen"
 # ---------------------------------------------------------------------------
 
 
-def test_generate_returns_generated_command_on_success() -> None:
-    """OllamaClient.generate parses a valid Ollama response into GeneratedCommand."""
-    payload = {"response": "ls -la"}
+def test_generate_returns_llm_result_on_success() -> None:
+    """OllamaClient.generate parses a valid Ollama chat response into LLMResult."""
+    payload = {"message": {"role": "assistant", "content": "ls -la"}}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)) as mock_open:
         client = OllamaClient()
         result = client.generate("list files")
 
-    assert isinstance(result, GeneratedCommand)
-    assert result.command == "ls -la"
-    assert result.prompt == "list files"
+    assert result == LLMResult(success=True, content="ls -la")
     mock_open.assert_called_once()
+    req = mock_open.call_args[0][0]
+    assert req.full_url.endswith("/api/chat")
 
 
 def test_generate_strips_whitespace_from_response() -> None:
     """Trailing/leading whitespace in the model response is stripped."""
-    payload = {"response": "  echo hello  \n"}
+    payload = {"message": {"role": "assistant", "content": "  echo hello  \n"}}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)):
         client = OllamaClient()
         result = client.generate("greet")
 
-    assert result.command == "echo hello"
+    assert result == LLMResult(success=True, content="echo hello")
 
 
-def test_generate_passes_context_in_request_body() -> None:
-    """The shell context dict is serialised into the request prompt."""
-    payload = {"response": "pwd"}
+def test_generate_passes_context_and_messages_in_body() -> None:
+    """The shell context and prompt are structured into chat messages."""
+    payload = {"message": {"role": "assistant", "content": "pwd"}}
     context = {"shell": "bash", "cwd": "/home/user"}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)) as mock_open:
@@ -78,16 +77,20 @@ def test_generate_passes_context_in_request_body() -> None:
         client.generate("print working directory", context=context)
 
     call_args = mock_open.call_args
-    request_obj = call_args[0][0]  # first positional arg = urllib.request.Request
+    request_obj = call_args[0][0]
     sent_body = json.loads(request_obj.data.decode("utf-8"))
     assert sent_body["model"] == "qwen2.5-coder:3b"
-    assert "bash" in sent_body["prompt"]
-    assert "/home/user" in sent_body["prompt"]
+    assert sent_body["stream"] is False
+    messages = sent_body["messages"]
+    assert len(messages) == 2
+    assert messages[0]["role"] == "system"
+    assert "bash" in messages[1]["content"]
+    assert "/home/user" in messages[1]["content"]
 
 
 def test_generate_uses_custom_model_and_base_url() -> None:
     """Custom model name and base URL are reflected in the outgoing request."""
-    payload = {"response": "cat /etc/hosts"}
+    payload = {"message": {"role": "assistant", "content": "cat /etc/hosts"}}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)) as mock_open:
         client = OllamaClient(
@@ -97,7 +100,7 @@ def test_generate_uses_custom_model_and_base_url() -> None:
         client.generate("show hosts file")
 
     request_obj = mock_open.call_args[0][0]
-    assert "192.168.1.50:11434" in request_obj.full_url
+    assert "192.168.1.50:11434/api/chat" in request_obj.full_url
     body = json.loads(request_obj.data.decode("utf-8"))
     assert body["model"] == "llama3:8b"
 
@@ -128,10 +131,10 @@ def test_generate_raises_value_error_for_blank_prompt() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_generate_raises_llm_error_on_http_404() -> None:
-    """An HTTP 404 from Ollama is converted to LLMError."""
+def test_generate_returns_failure_on_http_404() -> None:
+    """An HTTP 404 from Ollama is returned as a failure LLMResult."""
     http_error = HTTPError(
-        url="http://localhost:11434/api/generate",
+        url="http://localhost:11434/api/chat",
         code=404,
         msg="Not Found",
         hdrs=MagicMock(),
@@ -140,14 +143,17 @@ def test_generate_raises_llm_error_on_http_404() -> None:
 
     with patch(_PATCH_TARGET, side_effect=http_error):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="HTTP error 404"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert result.content == ""
+    assert "404" in str(result.error)
 
 
-def test_generate_raises_llm_error_on_http_500() -> None:
-    """An HTTP 500 from Ollama is converted to LLMError."""
+def test_generate_returns_failure_on_http_500() -> None:
+    """An HTTP 500 from Ollama is returned as a failure LLMResult."""
     http_error = HTTPError(
-        url="http://localhost:11434/api/generate",
+        url="http://localhost:11434/api/chat",
         code=500,
         msg="Internal Server Error",
         hdrs=MagicMock(),
@@ -156,8 +162,11 @@ def test_generate_raises_llm_error_on_http_500() -> None:
 
     with patch(_PATCH_TARGET, side_effect=http_error):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="HTTP error 500"):
-            client.generate("crash the server")
+        result = client.generate("crash the server")
+
+    assert result.success is False
+    assert result.content == ""
+    assert "500" in str(result.error)
 
 
 # ---------------------------------------------------------------------------
@@ -165,28 +174,38 @@ def test_generate_raises_llm_error_on_http_500() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_generate_raises_llm_error_when_ollama_not_running() -> None:
-    """A URLError (Ollama not started) maps to LLMError with a helpful message."""
+def test_generate_returns_failure_when_ollama_not_running() -> None:
+    """A URLError maps to failure LLMResult with a helpful message."""
     with patch(_PATCH_TARGET, side_effect=URLError("Connection refused")):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="Could not connect to Ollama"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert result.content == ""
+    assert "Could not connect to Ollama" in str(result.error)
 
 
-def test_generate_raises_llm_error_on_os_error() -> None:
-    """Any OSError (e.g. broken pipe) is also caught and mapped to LLMError."""
+def test_generate_returns_failure_on_os_error() -> None:
+    """An OSError maps to failure LLMResult."""
     with patch(_PATCH_TARGET, side_effect=OSError("Broken pipe")):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="Could not connect to Ollama"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert "Could not connect to Ollama" in str(result.error)
 
 
-def test_generate_raises_llm_error_on_timeout() -> None:
-    """A TimeoutError (slow Ollama) maps to LLMError."""
-    with patch(_PATCH_TARGET, side_effect=TimeoutError("timed out")):
-        client = OllamaClient()
-        with pytest.raises(LLMError, match="Could not connect to Ollama"):
-            client.generate("list files")
+def test_generate_returns_failure_on_timeout() -> None:
+    """A TimeoutError maps to failure LLMResult with timeout info."""
+    with patch(_PATCH_TARGET, side_effect=TimeoutError()):
+        client = OllamaClient(timeout=10.0)
+        result = client.generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama request timed out after 10 seconds.",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -194,8 +213,8 @@ def test_generate_raises_llm_error_on_timeout() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_generate_raises_llm_error_on_invalid_json() -> None:
-    """Non-JSON body from Ollama is mapped to LLMError."""
+def test_generate_returns_failure_on_invalid_json() -> None:
+    """Non-JSON body from Ollama is mapped to failure LLMResult."""
     mock_resp = MagicMock()
     mock_resp.read.return_value = b"not-json-at-all"
     cm = MagicMock()
@@ -204,32 +223,38 @@ def test_generate_raises_llm_error_on_invalid_json() -> None:
 
     with patch(_PATCH_TARGET, return_value=cm):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="invalid response"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert result.error == "Ollama returned an invalid response."
 
 
-def test_generate_raises_llm_error_when_response_key_missing() -> None:
-    """A JSON body without the 'response' key maps to LLMError."""
-    payload = {"model": "qwen2.5-coder:3b", "done": True}  # no 'response' key
+def test_generate_returns_failure_when_message_key_missing() -> None:
+    """A JSON body without the 'message' key returns failure LLMResult."""
+    payload = {"model": "qwen2.5-coder:3b", "done": True}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="empty command"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert "unexpected response format" in str(result.error)
 
 
-def test_generate_raises_llm_error_when_response_is_whitespace_only() -> None:
+def test_generate_returns_failure_when_content_is_whitespace_only() -> None:
     """A response consisting only of whitespace is treated as empty."""
-    payload = {"response": "   \n\t  "}
+    payload = {"message": {"content": "   \n\t  "}}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="empty command"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert result.error == "Ollama returned empty assistant content."
 
 
-def test_generate_raises_llm_error_when_body_is_not_a_dict() -> None:
-    """A top-level JSON array (unexpected format) raises LLMError."""
+def test_generate_returns_failure_when_body_is_not_a_dict() -> None:
+    """A top-level JSON array raises unexpected format error."""
     mock_resp = MagicMock()
     mock_resp.read.return_value = json.dumps([1, 2, 3]).encode("utf-8")
     cm = MagicMock()
@@ -238,8 +263,10 @@ def test_generate_raises_llm_error_when_body_is_not_a_dict() -> None:
 
     with patch(_PATCH_TARGET, return_value=cm):
         client = OllamaClient()
-        with pytest.raises(LLMError, match="unexpected response format"):
-            client.generate("list files")
+        result = client.generate("list files")
+
+    assert result.success is False
+    assert "unexpected response format" in str(result.error)
 
 
 # ---------------------------------------------------------------------------
@@ -249,7 +276,7 @@ def test_generate_raises_llm_error_when_body_is_not_a_dict() -> None:
 
 def test_generate_passes_timeout_to_urlopen() -> None:
     """The configured timeout value is forwarded to urlopen."""
-    payload = {"response": "echo ok"}
+    payload = {"message": {"role": "assistant", "content": "echo ok"}}
 
     with patch(_PATCH_TARGET, return_value=_make_response(payload)) as mock_open:
         client = OllamaClient(timeout=5.0)
