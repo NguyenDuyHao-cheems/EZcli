@@ -3,6 +3,7 @@
 from ezcli.domain.models import GeneratedCommand
 from ezcli.llm import GeneratedCommand as PublicGeneratedCommand
 from ezcli.llm import LLMClient as PublicLLMClient
+from ezcli.llm import LLMError, OllamaClient
 from ezcli.llm.client import LLMClient
 
 
@@ -39,9 +40,19 @@ class MockLLMClient:
 
 
 def test_public_module_exports() -> None:
-    """The public module exports the command model and client protocol."""
+    """The public module exports the command model, client protocol, and adapter."""
     assert PublicGeneratedCommand is GeneratedCommand
     assert PublicLLMClient is LLMClient
+    assert issubclass(LLMError, RuntimeError)
+    assert callable(OllamaClient)
+
+
+def test_ollama_client_satisfies_contract() -> None:
+    """The production OllamaClient must satisfy the LLMClient protocol."""
+    client: LLMClient = OllamaClient()
+
+    assert hasattr(client, "generate")
+    assert callable(client.generate)
 
 
 def test_client_satisfies_contract() -> None:

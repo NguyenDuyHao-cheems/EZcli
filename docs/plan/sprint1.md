@@ -34,8 +34,7 @@ class LLMClient(Protocol):
         self,
         prompt: str,
         context: dict[str, str] | None = None,
-    ) -> GeneratedCommand:
-        ...
+    ) -> GeneratedCommand: ...
 ```
 
 `GeneratedCommand` được dùng xuyên suốt từ LLM adapter tới application,
