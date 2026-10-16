@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
-
 from ezcli.llm import LLMResult, MockLLMProvider, OllamaClient
 
 

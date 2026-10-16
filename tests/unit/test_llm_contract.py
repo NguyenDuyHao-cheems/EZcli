@@ -2,6 +2,7 @@
 
 from ezcli.llm import LLMClient as PublicLLMClient
 from ezcli.llm import LLMResult as PublicLLMResult
+from ezcli.llm import OllamaClient
 from ezcli.llm.client import LLMClient
 from ezcli.llm.result import LLMResult
 
@@ -38,10 +39,19 @@ class MockLLMClient:
 
 
 def test_public_module_exports() -> None:
-    """The public module exports the result model and client protocol."""
+    """The public module exports the result model, client protocol, and adapter."""
     assert PublicLLMResult is LLMResult
 
     assert PublicLLMClient is LLMClient
+    assert callable(OllamaClient)
+
+
+def test_ollama_client_satisfies_contract() -> None:
+    """The production OllamaClient must satisfy the LLMClient protocol."""
+    client: LLMClient = OllamaClient()
+
+    assert hasattr(client, "generate")
+    assert callable(client.generate)
 
 
 def test_client_satisfies_contract() -> None:

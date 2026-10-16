@@ -1,6 +1,7 @@
 """Mock LLM Provider cho ezcli."""
 
 from typing import Any
+
 from ezcli.llm.result import LLMResult
 
 

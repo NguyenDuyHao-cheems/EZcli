@@ -19,7 +19,7 @@ Khi đối chiếu contract LLM với SRS, có hai kiểu kết quả cùng tồ
 Codebase ban đầu kiểm thử hai hướng riêng biệt: contract test dùng
 `LLMResult`, còn Ollama adapter và application dùng
 `generate_command() -> GeneratedCommand`. Vì vậy test đều có thể chạy thành
- công nhưng adapter thật chưa thực sự implement `LLMClient`.
+công nhưng adapter thật chưa thực sự implement `LLMClient`.
 
 Điểm khó khăn chính là phải giữ được context của shell trong pipeline, đồng
 thời không đưa chi tiết HTTP, JSON, model hoặc streaming vào contract public.
@@ -88,7 +88,7 @@ hiển thị lỗi và không thực thi command khi LLM không khả dụng.
   `LLMResult.success` là `True`.
 - Cập nhật unit tests dùng mock, không phụ thuộc Ollama đang chạy.
 
-#### Kết quả kiểm chứng
+### Kết quả kiểm chứng
 
 Các lệnh sau đã chạy thành công:
 
@@ -107,7 +107,7 @@ uv run pytest
 `/api/chat` phản hồi thành công với `message.role=assistant` và
 `message.content`, xác nhận đường đi thành công của adapter.
 
-#### Lưu ý sau kiểm thử tích hợp
+### Lưu ý sau kiểm thử tích hợp
 
 - Model có thể trả command trong Markdown code fence, ví dụ
   ```` ```bash ... ``` ```` thay vì chỉ trả command thuần. Adapter hiện ánh xạ
@@ -122,3 +122,4 @@ uv run pytest
   theo.
 - Kiểm thử tích hợp xác nhận kết nối và ánh xạ response, nhưng không thay thế
   cho unit tests vì phụ thuộc vào Ollama, model và tài nguyên máy.
+

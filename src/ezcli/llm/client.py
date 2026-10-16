@@ -2,7 +2,6 @@
 
 from typing import Protocol
 
-
 from ezcli.llm.result import LLMResult
 
 
