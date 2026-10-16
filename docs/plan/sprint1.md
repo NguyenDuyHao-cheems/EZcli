@@ -2,12 +2,11 @@
 
 [plan](https://chatgpt.com/s/t_6ac8bb9786ac81918a563724d69641ad)
 
+## 12/10/2026 Chốt contract LLMClient và LLMResult
 
-# 12/10/2026 Chốt contract LLMClient và LLMResult
+### Báo cáo rà soát và thực hiện lại Sprint 1
 
-## Báo cáo rà soát và thực hiện lại Sprint 1
-
-### Khó khăn và điểm chưa đồng bộ đã phát hiện
+#### Khó khăn và điểm chưa đồng bộ đã phát hiện
 
 Khi đối chiếu contract LLM với SRS, có hai kiểu kết quả cùng tồn tại:
 
@@ -27,7 +26,7 @@ thời không đưa chi tiết HTTP, JSON, model hoặc streaming vào contract 
 Ngoài ra, lỗi Ollama cần được xử lý rõ ràng để thỏa mãn yêu cầu reliability
 trong SRS.
 
-### Quyết định contract
+#### Quyết định contract
 
 Sprint 1 được chốt theo model nghiệp vụ `GeneratedCommand`:
 
@@ -46,7 +45,7 @@ timeout, response không hợp lệ hoặc response rỗng. Các tham số Ollam
 model, URL và timeout vẫn là chi tiết nội bộ của adapter, không thuộc
 contract.
 
-### Công việc đã thực hiện
+#### Công việc đã thực hiện
 
 - Cập nhật `LLMClient` để trả về `GeneratedCommand`.
 - Đổi API của `OllamaClient` từ `generate_command()` sang `generate()`.
@@ -58,7 +57,7 @@ contract.
 - Giữ lại `result.py` như phần mã đã có, nhưng không còn là public contract
   của Sprint 1.
 
-### Kết quả mong đợi
+#### Kết quả mong đợi
 
 Luồng chính sau khi thực hiện lại:
 
@@ -74,8 +73,7 @@ prompt + context
 Luồng lỗi từ Ollama vẫn được báo bằng `LLMError`, để application/TUI có thể
 hiển thị lỗi và không thực thi command khi LLM không khả dụng.
 
-
-# 15/10/2026 Triển khai adapter Ollama /api/chat
+## 15/10/2026 Triển khai adapter Ollama /api/chat
 
 ### Đã thực hiện
 
@@ -90,7 +88,7 @@ hiển thị lỗi và không thực thi command khi LLM không khả dụng.
   `LLMResult.success` là `True`.
 - Cập nhật unit tests dùng mock, không phụ thuộc Ollama đang chạy.
 
-### Kết quả kiểm chứng
+#### Kết quả kiểm chứng
 
 Các lệnh sau đã chạy thành công:
 
@@ -109,7 +107,7 @@ uv run pytest
 `/api/chat` phản hồi thành công với `message.role=assistant` và
 `message.content`, xác nhận đường đi thành công của adapter.
 
-### Lưu ý sau kiểm thử tích hợp
+#### Lưu ý sau kiểm thử tích hợp
 
 - Model có thể trả command trong Markdown code fence, ví dụ
   ```` ```bash ... ``` ```` thay vì chỉ trả command thuần. Adapter hiện ánh xạ
@@ -124,4 +122,3 @@ uv run pytest
   theo.
 - Kiểm thử tích hợp xác nhận kết nối và ánh xạ response, nhưng không thay thế
   cho unit tests vì phụ thuộc vào Ollama, model và tài nguyên máy.
-

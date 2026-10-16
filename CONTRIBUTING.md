@@ -184,11 +184,30 @@ keep its dependency constraints aligned with the real configuration.
 
 ## Local checks
 
-Install the repository's fast pre-commit hooks once in each clone:
+The repository ships a `.pre-commit-config.yaml` with automatic formatters and
+linters. Install the git hook once in each clone so it runs before every commit:
 
 ```bash
 uv run pre-commit install
 ```
+
+Once installed, the hooks run automatically on `git commit` and fix files in
+place:
+
+- Ruff lints and auto-fixes Python code (`ruff check --fix`).
+- Ruff auto-formats Python code (`ruff format`).
+- rumdl lints and auto-fixes Markdown (`rumdl check --fix`).
+
+Because the hooks rewrite files, a commit that triggers any fix is **aborted**.
+Re-stage the fixed files and commit again:
+
+```bash
+git add -u
+git commit
+```
+
+This makes formatting mandatory: unformatted Python or Markdown cannot be
+committed without being fixed first.
 
 To check every tracked file manually, run:
 
@@ -226,7 +245,7 @@ uv run ruff check .
 uv run ruff format --check .
 uv run rumdl check .
 uv run mkdocs build --strict
-uv run pytest --cov=text_toolkit --cov-report=term-missing
+uv run pytest --cov=ezcli --cov-report=term-missing
 uv run mypy
 uv build --no-sources
 ```

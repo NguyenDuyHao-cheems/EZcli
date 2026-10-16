@@ -32,7 +32,7 @@ Select the most relevant option.
 - [ ] I added or updated tests if needed.
 - [ ] I ran relevant local checks, if applicable.
 - [ ] I reviewed the changes before requesting review.
-- [ ] I create pr to dev branch not main 
+- [ ] I create pr to dev branch not main
 
 ## Testing
 
