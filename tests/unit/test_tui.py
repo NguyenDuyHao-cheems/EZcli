@@ -8,7 +8,7 @@ handling, and confirmation modal behavior.
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from textual.widgets import Static
 
@@ -151,7 +151,12 @@ def test_handle_generation_error_updates_result_area() -> None:
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            app._handle_generation("trigger error")
+            with patch.object(
+                app.service,
+                "prepare_command",
+                side_effect=RuntimeError("Ollama is not running"),
+            ):
+                app._handle_generation("trigger error")
             result_text = str(app.query_one("#result", Static).content).lower()
             assert "lỗi" in result_text or "error" in result_text
 
