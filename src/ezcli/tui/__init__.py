@@ -1,4 +1,4 @@
-"""Textual terminal interface for EZcli using Mock LLM Provider."""
+"""Textual terminal interface for EZcli backed by the Ollama LLM client."""
 
 import sys
 from typing import TextIO
@@ -9,16 +9,15 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from ezcli.application import CommandService, PreparedCommand
-from ezcli.domain.models import GeneratedCommand, SafetyLevel, SafetyResult
+from ezcli.domain.models import SafetyLevel
 from ezcli.execution import execute_command
-from ezcli.llm.mock import MockLLMProvider
 
 
 class EZcliApp(App[None]):
     """Interactive terminal interface for EZcli."""
 
     TITLE = "EZcli"
-    SUB_TITLE = "Local Bash Command Assistant (Mock Mode)"
+    SUB_TITLE = "Local Bash Command Assistant (Ollama)"
 
     CSS = """
     Screen {
@@ -44,7 +43,6 @@ class EZcliApp(App[None]):
     def __init__(self) -> None:
         super().__init__()
         self.service = CommandService()
-        self.mock_provider = MockLLMProvider()
         self._prepared: PreparedCommand | None = None
         self._last_prompt: str = ""
 
@@ -101,35 +99,22 @@ class EZcliApp(App[None]):
             self._handle_generation(prompt)
 
     def _handle_generation(self, prompt: str) -> None:
-        """Generate command using MockLLMProvider strictly following contract."""
+        """Generate a command through the real LLM service."""
         self._last_prompt = prompt
         self._prepared = None
         self.query_one("#execute", Button).disabled = True
+        self.query_one("#result", Static).update("Đang sinh lệnh...")
 
         try:
-            res = self.mock_provider.generate_command(prompt)
-
-            if not res.success or res.error:
-                error_msg = res.error or "Unknown error"
-                self.query_one("#result", Static).update(f"[Lỗi]: {error_msg}")
-                return
-
-            command_text = res.content.strip() or "echo 'No content'"
-
-            prepared = PreparedCommand(
-                generated=GeneratedCommand(
-                    prompt=prompt,
-                    command=command_text,
-                ),
-                safety=SafetyResult(
-                    level=SafetyLevel.SAFE,
-                    reasons=("Phản hồi hợp lệ từ Mock LLM.",),
-                ),
-            )
-
-            self._show_result(prepared)
+            prepared = self.service.prepare_command(prompt)
+        except RuntimeError as exc:
+            self.query_one("#result", Static).update(f"[Lỗi]: {exc}")
+            return
         except Exception as exc:
             self.query_one("#result", Static).update(f"Không thể sinh lệnh: {exc}")
+            return
+
+        self._show_result(prepared)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
         """Display generated command concisely."""
