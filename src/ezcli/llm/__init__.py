@@ -94,6 +94,14 @@ class OllamaClient:
                 error="Ollama returned an unexpected response format.",
             )
 
+        provider_error = data.get("error")
+        if isinstance(provider_error, str) and provider_error.strip():
+            return LLMResult(
+                success=False,
+                content="",
+                error=f"Ollama returned an error: {provider_error.strip()}",
+            )
+
         message = data.get("message")
         if not isinstance(message, dict):
             return LLMResult(
@@ -103,14 +111,36 @@ class OllamaClient:
             )
 
         generated_text = message.get("content")
-        if not isinstance(generated_text, str) or not generated_text.strip():
+        if not isinstance(generated_text, str):
+            return LLMResult(
+                success=False,
+                content="",
+                error="Ollama returned an unexpected assistant content format.",
+            )
+
+        command = generated_text.strip()
+        if not command:
             return LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned empty assistant content.",
             )
 
+        if "\n" in command or "\r" in command:
+            return LLMResult(
+                success=False,
+                content="",
+                error="Ollama returned more than one command line.",
+            )
+
+        if "```" in command:
+            return LLMResult(
+                success=False,
+                content="",
+                error="Ollama returned Markdown instead of a Bash command.",
+            )
+
         return LLMResult(
             success=True,
-            content=generated_text.strip(),
+            content=command,
         )
