@@ -269,6 +269,62 @@ def test_generate_returns_failure_when_body_is_not_a_dict() -> None:
     assert "unexpected response format" in str(result.error)
 
 
+def test_generate_returns_failure_when_ollama_reports_provider_error() -> None:
+    """A provider error in a valid JSON response is not treated as a command."""
+    payload = {"error": "model 'missing-model' not found"}
+
+    with patch(_PATCH_TARGET, return_value=_make_response(payload)):
+        result = OllamaClient().generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama returned an error: model 'missing-model' not found",
+    )
+
+
+def test_generate_returns_failure_when_content_is_not_a_string() -> None:
+    """Non-string assistant content is rejected by the response contract."""
+    payload = {"message": {"content": {"command": "ls"}}}
+
+    with patch(_PATCH_TARGET, return_value=_make_response(payload)):
+        result = OllamaClient().generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama returned an unexpected assistant content format.",
+    )
+
+
+def test_generate_returns_failure_when_content_has_multiple_lines() -> None:
+    """A multi-line response cannot be normalized to one Bash command."""
+    payload = {"message": {"content": "cd /tmp\nls -la"}}
+
+    with patch(_PATCH_TARGET, return_value=_make_response(payload)):
+        result = OllamaClient().generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama returned more than one command line.",
+    )
+
+
+def test_generate_returns_failure_when_content_uses_markdown_fence() -> None:
+    """Markdown-wrapped output is rejected instead of sent to execution."""
+    payload = {"message": {"content": "```bash\nls -la\n```"}}
+
+    with patch(_PATCH_TARGET, return_value=_make_response(payload)):
+        result = OllamaClient().generate("list files")
+
+    assert result == LLMResult(
+        success=False,
+        content="",
+        error="Ollama returned Markdown instead of a Bash command.",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Timeout configuration is forwarded to urlopen
 # ---------------------------------------------------------------------------

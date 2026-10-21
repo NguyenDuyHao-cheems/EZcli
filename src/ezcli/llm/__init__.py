@@ -126,18 +126,18 @@ class OllamaClient:
                 error="Ollama returned empty assistant content.",
             )
 
-        if "\n" in command or "\r" in command:
-            return LLMResult(
-                success=False,
-                content="",
-                error="Ollama returned more than one command line.",
-            )
-
         if "```" in command:
             return LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned Markdown instead of a Bash command.",
+            )
+
+        if "\n" in command or "\r" in command:
+            return LLMResult(
+                success=False,
+                content="",
+                error="Ollama returned more than one command line.",
             )
 
         return LLMResult(
