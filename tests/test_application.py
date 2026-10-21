@@ -33,6 +33,24 @@ def test_prepare_command_returns_safe_result(tmp_path: Path) -> None:
     assert prepared.safety.level == SafetyLevel.SAFE
 
 
+def test_prepare_command_does_not_execute_generated_command(tmp_path: Path) -> None:
+    """Preparing a command must never invoke the command executor."""
+    service = CommandService(history_store=HistoryStore(tmp_path / "history.json"))
+
+    with (
+        patch.object(
+            service._llm_client,
+            "generate",
+            return_value=LLMResult(success=True, content="echo safe"),
+        ),
+        patch("ezcli.execution.execute_command") as mock_execute,
+    ):
+        prepared = service.prepare_command("print safe")
+
+    assert prepared.generated.command == "echo safe"
+    mock_execute.assert_not_called()
+
+
 def test_prepare_command_blocks_dangerous_command(
     tmp_path: Path,
 ) -> None:
