@@ -11,6 +11,7 @@ from textual.widgets import Button, Input, Static
 from ezcli.application import CommandService, PreparedCommand
 from ezcli.domain.models import SafetyLevel
 from ezcli.execution import execute_command
+from ezcli.safety import check_command
 
 
 class EZcliApp(App[None]):
@@ -37,8 +38,17 @@ class EZcliApp(App[None]):
 
     #actions {
         height: auto;
+        color: $text-muted;
+        padding: 0 1;
     }
     """
+
+    BINDINGS = [
+        ("e", "execute_action", "Execute"),
+        ("m", "modify_action", "Modify"),
+        ("d", "describe_action", "Describe"),
+        ("a", "abort_action", "Abort"),
+    ]
 
     def __init__(self) -> None:
         super().__init__()
@@ -49,7 +59,7 @@ class EZcliApp(App[None]):
     def compose(self) -> ComposeResult:
         """Build the application layout."""
         with Vertical():
-            yield Static("Nhập yêu cầu bằng ngôn ngữ tự nhiên để sinh lệnh Bash.")
+            yield Static("> Nhập yêu cầu để sinh lệnh Bash.")
             yield Input(
                 placeholder="Ví dụ: liệt kê các file trong thư mục hiện tại",
                 id="prompt",
@@ -59,50 +69,62 @@ class EZcliApp(App[None]):
                 id="result",
                 markup=False,
             )
-            with Horizontal(id="actions"):
-                yield Button("Sinh lệnh", id="generate", variant="primary")
-                yield Button("Thực thi", id="execute", variant="success", disabled=True)
-                yield Button("Hủy", id="cancel")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle action button presses."""
-        if event.button.id == "generate":
-            prompt = self.query_one("#prompt", Input).value.strip()
-            if not prompt:
-                self.query_one("#result", Static).update("Vui lòng nhập yêu cầu.")
-                return
-            self._handle_generation(prompt)
-
-        elif event.button.id == "execute":
-            if self._prepared is None:
-                return
-            if self._prepared.safety.level == SafetyLevel.BLOCKED:
-                self.query_one("#result", Static).update(
-                    "Lệnh bị chặn và không thể thực thi."
-                )
-                return
-            self.push_screen(
-                ConfirmScreen(self._prepared),
-                self._on_confirmation,
+            yield Static(
+                "[E]xecute, [M]odify, [D]escribe, [A]bort",
+                id="actions",
+                markup=False,
             )
 
-        elif event.button.id == "cancel":
-            self._prepared = None
-            self._last_prompt = ""
-            self.query_one("#execute", Button).disabled = True
-            self.query_one("#result", Static).update("Đã hủy thao tác.")
-
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Generate a command when Enter is pressed in the input."""
+        """Generate a command when Enter is pressed in the prompt."""
         prompt = event.value.strip()
         if prompt:
             self._handle_generation(prompt)
+
+    def action_execute_action(self) -> None:
+        """Start the execute workflow for the prepared command."""
+        if self._prepared is None:
+            return
+        if self._prepared.safety.level == SafetyLevel.BLOCKED:
+            self.query_one("#result", Static).update(
+                "Lệnh bị chặn và không thể thực thi."
+            )
+            return
+        self.push_screen(ConfirmScreen(self._prepared), self._on_confirmation)
+
+    def action_modify_action(self) -> None:
+        """Open the command editor when a command has been generated."""
+        if self._prepared is None:
+            return
+        self.push_screen(ModifyScreen(self._prepared), self._on_modified)
+
+    def action_describe_action(self) -> None:
+        """Show the available description for the prepared command."""
+        if self._prepared is None:
+            return
+        explanation = self._prepared.generated.explanation.strip()
+        if not explanation:
+            explanation = "Chưa có mô tả cho lệnh này."
+        self.query_one("#result", Static).update(
+            f"{self._prepared.generated.command}\n\nGiải thích:\n{explanation}"
+        )
+
+    def action_abort_action(self) -> None:
+        """Abort the current command workflow and return to prompt input."""
+        self._prepared = None
+        self._last_prompt = ""
+        prompt = self.query_one("#prompt", Input)
+        prompt.value = ""
+        prompt.disabled = False
+        prompt.focus()
+        self.query_one("#result", Static).update(
+            "Đã hủy. Nhập yêu cầu mới rồi nhấn Enter."
+        )
 
     def _handle_generation(self, prompt: str) -> None:
         """Generate a command through the real LLM service."""
         self._last_prompt = prompt
         self._prepared = None
-        self.query_one("#execute", Button).disabled = True
         self.query_one("#result", Static).update("Đang sinh lệnh...")
 
         try:
@@ -117,13 +139,29 @@ class EZcliApp(App[None]):
         self._show_result(prepared)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
-        """Display generated command concisely."""
+        """Display a generated command and enable keyboard actions."""
         self._prepared = prepared
-        self.query_one("#execute", Button).disabled = (
-            prepared.safety.level == SafetyLevel.BLOCKED
-        )
+        self.query_one("#prompt", Input).disabled = True
+        self.query_one("#result", Static).update(prepared.generated.command)
 
-        self.query_one("#result", Static).update(f"{prepared.generated.command}")
+    def _on_modified(self, command: str | None) -> None:
+        """Apply an edited command and recalculate its safety level."""
+        if command is None or self._prepared is None:
+            return
+        command = command.strip()
+        if not command:
+            self.query_one("#result", Static).update("Lệnh không được để trống.")
+            return
+        generated = self._prepared.generated
+        updated = PreparedCommand(
+            generated=type(generated)(
+                prompt=generated.prompt,
+                command=command,
+                explanation=generated.explanation,
+            ),
+            safety=check_command(command),
+        )
+        self._show_result(updated)
 
     def _on_confirmation(self, confirmed: bool | None) -> None:
         """Handle execution confirmation or return back to generation view."""
@@ -149,10 +187,7 @@ class EZcliApp(App[None]):
             except Exception:
                 pass
 
-        result = execute_command(
-            prepared.generated.command,
-            confirmed=True,
-        )
+        result = execute_command(prepared.generated.command, confirmed=True)
 
         try:
             self.service.record_outcome(
@@ -163,14 +198,11 @@ class EZcliApp(App[None]):
         except Exception:
             pass
 
-        stdout_text = result.stdout or ""
-        stderr_text = result.stderr or ""
-
         self.query_one("#result", Static).update(
             f"Trạng thái: {result.status.value}\n"
             f"Mã thoát: {result.exit_code}\n\n"
-            f"STDOUT:\n{stdout_text}\n\n"
-            f"STDERR:\n{stderr_text}"
+            f"STDOUT:\n{result.stdout or ''}\n\n"
+            f"STDERR:\n{result.stderr or ''}"
         )
 
 
@@ -192,10 +224,34 @@ class ConfirmScreen(ModalScreen[bool]):
             yield Button("Quay lại", id="back")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "confirm":
-            self.dismiss(True)
+        self.dismiss(event.button.id == "confirm")
+
+
+class ModifyScreen(ModalScreen[str | None]):
+    """Collect an edited version of a generated command."""
+
+    def __init__(self, prepared: PreparedCommand) -> None:
+        super().__init__()
+        self.prepared = prepared
+
+    def compose(self) -> ComposeResult:
+        yield Static("Sửa command rồi nhấn Enter để xác nhận.")
+        yield Input(value=self.prepared.generated.command, id="modified-command")
+        with Horizontal():
+            yield Button("Lưu", id="save", variant="primary")
+            yield Button("Quay lại", id="back")
+
+    def on_mount(self) -> None:
+        self.query_one("#modified-command", Input).focus()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        self.dismiss(event.value)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "save":
+            self.dismiss(self.query_one("#modified-command", Input).value)
         else:
-            self.dismiss(False)
+            self.dismiss(None)
 
 
 def run() -> None:
