@@ -21,8 +21,10 @@ class EZcliApp(App[None]):
     SUB_TITLE = "Local Bash Command Assistant (Ollama)"
 
     CSS = """
+
     Screen {
         padding: 1 2;
+        background: transparent;
     }
 
     #prompt {
@@ -99,15 +101,42 @@ class EZcliApp(App[None]):
         self.push_screen(ModifyScreen(self._prepared), self._on_modified)
 
     def action_describe_action(self) -> None:
-        """Show the available description for the prepared command."""
+        """Request and show a description for the prepared command."""
         if self._prepared is None:
             return
-        explanation = self._prepared.generated.explanation.strip()
-        if not explanation:
-            explanation = "Chưa có mô tả cho lệnh này."
-        self.query_one("#result", Static).update(
-            f"{self._prepared.generated.command}\n\nGiải thích:\n{explanation}"
+        command = self._prepared.generated.command
+        self.query_one("#result", Static).update("Đang tạo mô tả...")
+        self.run_worker(
+            lambda: self._explain_in_background(command),
+            thread=True,
         )
+
+    def _explain_in_background(self, command: str) -> None:
+        """Request an explanation without blocking the Textual event loop."""
+        try:
+            explanation = self.service.explain_command(command)
+        except RuntimeError as exc:
+            self.call_from_thread(self._show_explanation_error, command, str(exc))
+            return
+        self.call_from_thread(
+            self._show_explanation,
+            command,
+            explanation,
+        )
+
+    def _show_explanation(self, command: str, explanation: str) -> None:
+        """Render an explanation if the command is still current."""
+        if self._prepared is None or self._prepared.generated.command != command:
+            return
+        self.query_one("#result", Static).update(
+            f"{command}\n\nGiải thích:\n{explanation}"
+        )
+
+    def _show_explanation_error(self, command: str, error: str) -> None:
+        """Render an explanation error if the command is still current."""
+        if self._prepared is None or self._prepared.generated.command != command:
+            return
+        self.query_one("#result", Static).update(f"{command}\n\n[Lỗi]: {error}")
 
     def action_abort_action(self) -> None:
         """Abort the current command workflow and return to prompt input."""
@@ -214,14 +243,29 @@ class ConfirmScreen(ModalScreen[bool]):
         self.prepared = prepared
 
     def compose(self) -> ComposeResult:
-        yield Static(
-            "Bạn có chắc muốn thực thi lệnh này?\n\n"
-            f"{self.prepared.generated.command}\n\n"
-            f"Mức an toàn: {self.prepared.safety.level.value.upper()}"
-        )
+        if self.prepared.safety.level == SafetyLevel.WARNING:
+            reasons = "\n".join(
+                f"- {reason}" for reason in self.prepared.safety.reasons
+            )
+            message = (
+                "CẢNH BÁO: lệnh này có thể ảnh hưởng đến hệ thống.\n\n"
+                f"{self.prepared.generated.command}\n\n"
+                f"Lý do cảnh báo:\n{reasons}\n\n"
+                "Bạn có hiểu rủi ro và vẫn muốn thực thi không?"
+            )
+            confirm_label = "Tôi hiểu, vẫn thực thi"
+        else:
+            message = (
+                "Bạn có chắc muốn thực thi lệnh này?\n\n"
+                f"{self.prepared.generated.command}\n\n"
+                f"Mức an toàn: {self.prepared.safety.level.value.upper()}"
+            )
+            confirm_label = "Xác nhận thực thi"
+
+        yield Static(message)
         with Horizontal():
-            yield Button("Xác nhận thực thi", id="confirm", variant="error")
-            yield Button("Quay lại", id="back")
+            yield Button(confirm_label, id="confirm", variant="error")
+            yield Button("Hủy", id="back")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.dismiss(event.button.id == "confirm")
