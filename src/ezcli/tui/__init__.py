@@ -1,6 +1,8 @@
 """Textual terminal interface for EZcli backed by the Ollama LLM client."""
 
 import sys
+from datetime import datetime
+from pathlib import Path
 from typing import TextIO
 
 from textual.app import App, ComposeResult
@@ -9,8 +11,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from ezcli.application import CommandService, PreparedCommand
-from ezcli.domain.models import SafetyLevel
+from ezcli.domain.models import HistoryEntry, SafetyLevel
 from ezcli.execution import execute_command
+from ezcli.history import HistoryStore
 
 
 class EZcliApp(App[None]):
@@ -45,6 +48,7 @@ class EZcliApp(App[None]):
         self.service = CommandService()
         self._prepared: PreparedCommand | None = None
         self._last_prompt: str = ""
+        self.history_store = HistoryStore(Path(".ezcli_history.json"))
 
     def compose(self) -> ComposeResult:
         """Build the application layout."""
@@ -100,6 +104,13 @@ class EZcliApp(App[None]):
 
     def _handle_generation(self, prompt: str) -> None:
         """Generate a command through the real LLM service."""
+        cleaned_prompt = prompt.strip()
+        # Xử lý lệnh xem lịch sử
+        if cleaned_prompt == "/history":
+            history_text = handle_history_command(self.history_store)
+            self.query_one("#result", Static).update(history_text)
+            return
+
         self._last_prompt = prompt
         self._prepared = None
         self.query_one("#execute", Button).disabled = True
@@ -163,6 +174,19 @@ class EZcliApp(App[None]):
         except Exception:
             pass
 
+        entry = HistoryEntry(
+            prompt=self._last_prompt,
+            command=prepared.generated.command,
+            timestamp=datetime.now(),
+            safety=prepared.safety.level,
+            status=result.status,
+            exit_code=result.exit_code,
+        )
+        try:
+            self.history_store.save(entry)
+        except Exception as e:
+            print(f"Lỗi lưu lịch sử: {e}")
+
         stdout_text = result.stdout or ""
         stderr_text = result.stderr or ""
 
@@ -196,6 +220,30 @@ class ConfirmScreen(ModalScreen[bool]):
             self.dismiss(True)
         else:
             self.dismiss(False)
+
+
+def handle_history_command(store: HistoryStore) -> str:
+    """Đọc lịch sử từ store và định dạng thành chuỗi hiển thị lên TUI."""
+    entries = store.load()
+    if not entries:
+        return "Lịch sử thao tác trống."
+
+    lines = ["=== LỊCH SỬ THAO TÁC ==="]
+    for idx, item in enumerate(entries, start=1):
+        time_str = item.timestamp.strftime("%H:%M:%S")
+        status_val = item.status.value
+        safety_val = item.safety.value
+        lines.append(
+            f"[{idx}] {time_str} | Status: {status_val} | Safety: {safety_val}"
+        )
+
+        lines.append(f"    Prompt  : {item.prompt}")
+        lines.append(f"    Command : {item.command}")
+        if item.exit_code is not None:
+            lines.append(f"    Exit Code: {item.exit_code}")
+        lines.append("-" * 40)
+
+    return "\n".join(lines)
 
 
 def run() -> None:
