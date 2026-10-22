@@ -11,9 +11,11 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from ezcli.application import CommandService, PreparedCommand
-from ezcli.domain.models import HistoryEntry, SafetyLevel
+from ezcli.domain.models import GeneratedCommand, HistoryEntry, SafetyLevel
 from ezcli.execution import execute_command
 from ezcli.history import HistoryStore
+from ezcli.plugins import handle_plugin_command
+from ezcli.safety import check_command
 
 
 class EZcliApp(App[None]):
@@ -111,6 +113,11 @@ class EZcliApp(App[None]):
             self.query_one("#result", Static).update(history_text)
             return
 
+        # Xử lý lệnh quản lý plugin
+        if cleaned_prompt == "/plugin" or cleaned_prompt.startswith("/plugin "):
+            self._handle_plugin(cleaned_prompt)
+            return
+
         self._last_prompt = prompt
         self._prepared = None
         self.query_one("#execute", Button).disabled = True
@@ -126,6 +133,31 @@ class EZcliApp(App[None]):
             return
 
         self._show_result(prepared)
+
+    def _handle_plugin(self, prompt: str) -> None:
+        """Process /plugin slash commands (list, install, remove)."""
+        parts = prompt.split()
+        args = parts[1:]
+        result = handle_plugin_command(args)
+
+        self._last_prompt = prompt
+        if result.command:
+            safety = check_command(result.command)
+            prepared = PreparedCommand(
+                generated=GeneratedCommand(prompt=prompt, command=result.command),
+                safety=safety,
+            )
+            self._prepared = prepared
+            self.query_one("#execute", Button).disabled = (
+                safety.level == SafetyLevel.BLOCKED
+            )
+            self.query_one("#result", Static).update(
+                f"{result.message}\n\nNhấn 'Thực thi' để chạy lệnh này."
+            )
+        else:
+            self._prepared = None
+            self.query_one("#execute", Button).disabled = True
+            self.query_one("#result", Static).update(result.message)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
         """Display generated command concisely."""
