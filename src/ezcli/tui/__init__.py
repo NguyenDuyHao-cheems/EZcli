@@ -135,9 +135,11 @@ class EZcliApp(App[None]):
                 )
 
             yield Static(
+
                 "[E]xecute, [M]odify, [D]escribe, [A]bort",
                 id="actions",
                 markup=False,
+
             )
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -300,6 +302,7 @@ class EZcliApp(App[None]):
     def _show_result(self, prepared: PreparedCommand) -> None:
         """Display a generated command and enable keyboard actions."""
         self._prepared = prepared
+
         self.query_one("#prompt", TextArea).disabled = True
         self._update_result(prepared.generated.command)
 
