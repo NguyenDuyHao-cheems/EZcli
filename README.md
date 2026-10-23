@@ -51,10 +51,10 @@ Ensure Ollama is installed and the required model is available before using AI-p
 
 ## LLM Debug Logs
 
-EZcli writes one JSON record per Ollama request to `logs/llm-debug.jsonl`.
-The record includes the operation, prompts sent to the model, response or
-error, model name, and request latency. This helps compare the prompt with
-the model response while investigating generation behavior.
+EZcli writes one formatted JSON record per Ollama request to
+`logs/llm-debug.json`. The record includes the operation, prompts sent to the
+model, response or error, model name, and request latency. This helps compare
+the prompt with the model response while investigating generation behavior.
 
 The `logs/` directory is ignored by Git and must not be committed. The log is
 created when an `OllamaClient` request is made. Because prompts can contain
