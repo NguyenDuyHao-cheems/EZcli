@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from textual.widgets import Input, Static
+from textual.widgets import Input, Static, TextArea
 
 from ezcli.application import PreparedCommand
 from ezcli.domain.models import (
@@ -64,7 +64,7 @@ def test_initial_state_result_placeholder() -> None:
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            result_widget = app.query_one("#result", Static)
+            result_widget = app.query_one("#result", TextArea)
             assert result_widget is not None
 
     asyncio.run(_test())
@@ -94,7 +94,7 @@ def test_abort_action_resets_prepared_command() -> None:
 
             assert app._prepared is None
             assert app.query_one("#prompt").disabled is False
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "hủy" in result_text.lower()
 
     asyncio.run(_test())
@@ -116,7 +116,7 @@ def test_show_result_disables_prompt_for_safe_command() -> None:
 
             assert app._prepared is prepared
             assert app.query_one("#prompt").disabled is True
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "ls -la" in result_text
 
     asyncio.run(_test())
@@ -137,7 +137,7 @@ def test_show_result_displays_blocked_command() -> None:
 
             assert app._prepared is prepared
             assert app.query_one("#prompt").disabled is True
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "rm -rf /" in result_text
 
     asyncio.run(_test())
@@ -155,7 +155,7 @@ def test_handle_generation_error_updates_result_area() -> None:
                 side_effect=RuntimeError("Ollama is not running"),
             ):
                 app._handle_generation("trigger error")
-            result_text = str(app.query_one("#result", Static).content).lower()
+            result_text = app.query_one("#result", TextArea).text.lower()
             assert "lỗi" in result_text or "error" in result_text
 
     asyncio.run(_test())
@@ -177,7 +177,7 @@ def test_describe_action_requests_explanation_in_background() -> None:
                 await pilot.pause(1)
 
             explain.assert_called_once_with("mkdir demo")
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "Creates the demo directory." in result_text
 
     asyncio.run(_test())
@@ -193,7 +193,7 @@ def test_on_confirmation_cancelled_updates_message() -> None:
             app._last_prompt = ""
             app._on_confirmation(confirmed=False)
 
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "hủy thực thi" in result_text.lower()
 
     asyncio.run(_test())
@@ -250,7 +250,7 @@ def test_tui_plugin_list_displays_plugin_catalog() -> None:
         app = EZcliApp()
         async with app.run_test():
             app._handle_generation("/plugin")
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
 
             assert "QUẢN LÝ PLUGINS" in result_text
             assert "tldr" in result_text
@@ -269,7 +269,7 @@ def test_tui_plugin_install_prepares_command_when_not_installed() -> None:
             with patch("ezcli.plugins.shutil.which", return_value=None):
                 app._handle_generation("/plugin install tldr")
 
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "Chuẩn bị cài đặt" in result_text
             assert app._prepared is not None
             assert app._prepared.generated.command == "pip install tldr"
@@ -287,7 +287,7 @@ def test_tui_plugin_install_notifies_when_already_installed() -> None:
             with patch("ezcli.plugins.shutil.which", return_value="/usr/bin/tldr"):
                 app._handle_generation("/plugin install tldr")
 
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "đã được cài đặt" in result_text
             assert app._prepared is None
             assert app.query_one("#execute").disabled is True

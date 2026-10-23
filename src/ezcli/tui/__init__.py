@@ -1,14 +1,19 @@
 """Textual terminal interface for EZcli backed by the Ollama LLM client."""
 
 import sys
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import TextIO
 
+from textual import events
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.geometry import Region
+from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Static
+from textual.widget import Widget
+from textual.widgets import Button, Input, Static, TextArea
 
 from ezcli.application import CommandService, PreparedCommand
 from ezcli.domain.models import GeneratedCommand, HistoryEntry, SafetyLevel
@@ -16,6 +21,44 @@ from ezcli.execution import execute_command
 from ezcli.history import HistoryStore
 from ezcli.plugins import handle_plugin_command
 from ezcli.safety import check_command
+
+
+class LeftScrollTextArea(TextArea):
+    """Text area that keeps its vertical scrollbar on the left."""
+
+    async def _on_key(self, event: events.Key) -> None:
+        """Submit the prompt instead of inserting a newline."""
+        if self.id == "prompt" and event.key == "enter":
+            event.stop()
+            event.prevent_default()
+            self.post_message(PromptSubmitted(self.text))
+            return
+        await super()._on_key(event)
+
+    def _arrange_scrollbars(self, region: Region) -> Iterable[tuple[Widget, Region]]:
+        if self.show_horizontal_scrollbar:
+            yield from super()._arrange_scrollbars(region)
+            return
+
+        if self.show_vertical_scrollbar and self.scrollbar_size_vertical:
+            window_region, scrollbar_region = region.split_vertical(
+                self.scrollbar_size_vertical
+            )
+            scrollbar = self.vertical_scrollbar
+            scrollbar.window_virtual_size = self.virtual_size.height
+            scrollbar.window_size = window_region.height
+            yield scrollbar, scrollbar_region
+            return
+
+        yield from super()._arrange_scrollbars(region)
+
+
+class PromptSubmitted(Message):
+    """Message emitted when the main prompt is submitted."""
+
+    def __init__(self, text: str) -> None:
+        super().__init__()
+        self.text = text
 
 
 class EZcliApp(App[None]):
@@ -32,14 +75,22 @@ class EZcliApp(App[None]):
     }
 
     #prompt {
-        margin-bottom: 1;
+        height: 5;
+        min-height: 2;
+        margin: 0 0 1 0;
+        padding: 0 1;
+    }
+
+    #result-scroll {
+        height: 1fr;
+        border: round $primary;
+        padding: 0;
+        margin-bottom: 0;
     }
 
     #result {
-        height: 1fr;
-        border: round $primary;
-        padding: 1;
-        margin-bottom: 1;
+        width: 100%;
+        height: auto;
     }
 
     #actions {
@@ -66,16 +117,18 @@ class EZcliApp(App[None]):
     def compose(self) -> ComposeResult:
         """Build the application layout."""
         with Vertical():
-            yield Static("> Nhập yêu cầu để sinh lệnh Bash.")
-            yield Input(
+            yield Static("> Nhập yêu cầu để sinh lệnh Bash.\n")
+            yield LeftScrollTextArea(
                 placeholder="Ví dụ: liệt kê các file trong thư mục hiện tại",
                 id="prompt",
             )
-            yield Static(
-                "Lệnh được sinh ra sẽ hiển thị tại đây.",
-                id="result",
-                markup=False,
-            )
+            with VerticalScroll(id="result-scroll"):
+                yield Static(
+                    "Lệnh được sinh ra sẽ hiển thị tại đây.",
+                    id="result",
+                    markup=False,
+                )
+
             yield Static(
                 "[E]xecute, [M]odify, [D]escribe, [A]bort",
                 id="actions",
@@ -88,14 +141,22 @@ class EZcliApp(App[None]):
         if prompt:
             self._handle_generation(prompt)
 
+    def on_prompt_submitted(self, event: PromptSubmitted) -> None:
+        """Generate a command when Enter is pressed in the prompt."""
+        prompt = event.text.strip()
+        if prompt:
+            self._handle_generation(prompt)
+
+    def _update_result(self, text: str) -> None:
+        """Update the scrollable result area."""
+        self.query_one("#result", Static).update(text)
+
     def action_execute_action(self) -> None:
         """Start the execute workflow for the prepared command."""
         if self._prepared is None:
             return
         if self._prepared.safety.level == SafetyLevel.BLOCKED:
-            self.query_one("#result", Static).update(
-                "Lệnh bị chặn và không thể thực thi."
-            )
+            self._update_result("Lệnh bị chặn và không thể thực thi.")
             return
         self.push_screen(ConfirmScreen(self._prepared), self._on_confirmation)
 
@@ -110,7 +171,7 @@ class EZcliApp(App[None]):
         if self._prepared is None:
             return
         command = self._prepared.generated.command
-        self.query_one("#result", Static).update("Đang tạo mô tả...")
+        self._update_result("Đang tạo mô tả...")
         self.run_worker(
             lambda: self._explain_in_background(command),
             thread=True,
@@ -133,27 +194,23 @@ class EZcliApp(App[None]):
         """Render an explanation if the command is still current."""
         if self._prepared is None or self._prepared.generated.command != command:
             return
-        self.query_one("#result", Static).update(
-            f"{command}\n\nGiải thích:\n{explanation}"
-        )
+        self._update_result(f"{command}\n\nGiải thích:\n{explanation}")
 
     def _show_explanation_error(self, command: str, error: str) -> None:
         """Render an explanation error if the command is still current."""
         if self._prepared is None or self._prepared.generated.command != command:
             return
-        self.query_one("#result", Static).update(f"{command}\n\n[Lỗi]: {error}")
+        self._update_result(f"{command}\n\n[Lỗi]: {error}")
 
     def action_abort_action(self) -> None:
         """Abort the current command workflow and return to prompt input."""
         self._prepared = None
         self._last_prompt = ""
-        prompt = self.query_one("#prompt", Input)
-        prompt.value = ""
+        prompt = self.query_one("#prompt", TextArea)
+        prompt.load_text("")
         prompt.disabled = False
         prompt.focus()
-        self.query_one("#result", Static).update(
-            "Đã hủy. Nhập yêu cầu mới rồi nhấn Enter."
-        )
+        self._update_result("Đã hủy. Nhập yêu cầu mới rồi nhấn Enter.")
 
     def _handle_generation(self, prompt: str) -> None:
         """Generate a command through the real LLM service."""
@@ -161,7 +218,7 @@ class EZcliApp(App[None]):
         # Xử lý lệnh xem lịch sử
         if cleaned_prompt == "/history":
             history_text = handle_history_command(self.history_store)
-            self.query_one("#result", Static).update(history_text)
+            self._update_result(history_text)
             return
 
         # Xử lý lệnh quản lý plugin
@@ -171,15 +228,15 @@ class EZcliApp(App[None]):
 
         self._last_prompt = prompt
         self._prepared = None
-        self.query_one("#result", Static).update("Đang sinh lệnh...")
+        self._update_result("Đang sinh lệnh...")
 
         try:
             prepared = self.service.prepare_command(prompt)
         except RuntimeError as exc:
-            self.query_one("#result", Static).update(f"[Lỗi]: {exc}")
+            self._update_result(f"[Lỗi]: {exc}")
             return
         except Exception as exc:
-            self.query_one("#result", Static).update(f"Không thể sinh lệnh: {exc}")
+            self._update_result(f"Không thể sinh lệnh: {exc}")
             return
 
         self._show_result(prepared)
@@ -201,19 +258,19 @@ class EZcliApp(App[None]):
             self.query_one("#execute", Button).disabled = (
                 safety.level == SafetyLevel.BLOCKED
             )
-            self.query_one("#result", Static).update(
+            self._update_result(
                 f"{result.message}\n\nNhấn 'Thực thi' để chạy lệnh này."
             )
         else:
             self._prepared = None
             self.query_one("#execute", Button).disabled = True
-            self.query_one("#result", Static).update(result.message)
+            self._update_result(result.message)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
         """Display a generated command and enable keyboard actions."""
         self._prepared = prepared
-        self.query_one("#prompt", Input).disabled = True
-        self.query_one("#result", Static).update(prepared.generated.command)
+        self.query_one("#prompt", TextArea).disabled = True
+        self._update_result(prepared.generated.command)
 
     def _on_modified(self, command: str | None) -> None:
         """Apply an edited command and recalculate its safety level."""
@@ -221,7 +278,7 @@ class EZcliApp(App[None]):
             return
         command = command.strip()
         if not command:
-            self.query_one("#result", Static).update("Lệnh không được để trống.")
+            self._update_result("Lệnh không được để trống.")
             return
         generated = self._prepared.generated
         updated = PreparedCommand(
@@ -242,7 +299,7 @@ class EZcliApp(App[None]):
             elif self._last_prompt:
                 self._handle_generation(self._last_prompt)
             else:
-                self.query_one("#result", Static).update("Đã hủy thực thi.")
+                self._update_result("Đã hủy thực thi.")
             return
 
         prepared = self._prepared
@@ -282,7 +339,7 @@ class EZcliApp(App[None]):
         except Exception as e:
             print(f"Lỗi lưu lịch sử: {e}")
 
-        self.query_one("#result", Static).update(
+        self._update_result(
             f"Trạng thái: {result.status.value}\n"
             f"Mã thoát: {result.exit_code}\n\n"
             f"STDOUT:\n{result.stdout or ''}\n\n"
