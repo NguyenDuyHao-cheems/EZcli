@@ -221,4 +221,4 @@ class OllamaClient:
             "error": result.error,
             "latency_ms": round((time.perf_counter() - started_at) * 1000, 2),
         }
-        self._logger.debug(json.dumps(record, ensure_ascii=False))
+        self._logger.debug(json.dumps(record, ensure_ascii=False, indent=2))

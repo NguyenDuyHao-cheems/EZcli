@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 LLM_LOGGER_NAME = "ezcli.llm"
-DEFAULT_LOG_PATH = Path("logs") / "llm-debug.jsonl"
+DEFAULT_LOG_PATH = Path("logs") / "llm-debug.json"
 
 
 def configure_llm_logger(log_path: Path | None = None) -> logging.Logger:
