@@ -1,5 +1,3 @@
-"""Textual terminal interface for EZcli backed by the Ollama LLM client."""
-
 import sys
 from collections.abc import Iterable
 from datetime import datetime
@@ -90,7 +88,7 @@ class EZcliApp(App[None]):
     #result-scroll {
         height: 1fr;
         border: round $primary;
-        padding: 0;
+        padding: 0 1;
         margin-bottom: 0;
     }
 
@@ -235,17 +233,43 @@ class EZcliApp(App[None]):
 
         self._last_prompt = prompt
         self._prepared = None
-        self._update_result("Đang sinh lệnh...")
+        prompt_widget = self.query_one("#prompt", TextArea)
+        prompt_widget.load_text("Đang xử lý...")
+        prompt_widget.disabled = True
+        self.run_worker(
+            lambda: self._prepare_in_background(prompt),
+            thread=True,
+        )
 
+    def _prepare_in_background(self, prompt: str) -> None:
+        """Prepare a command without blocking the Textual event loop."""
         try:
             prepared = self.service.prepare_command(prompt)
         except RuntimeError as exc:
-            self._update_result(f"[Lỗi]: {exc}")
+            self.call_from_thread(self._show_generation_error, prompt, str(exc))
             return
         except Exception as exc:
-            self._update_result(f"Không thể sinh lệnh: {exc}")
+            self.call_from_thread(
+                self._show_generation_error,
+                prompt,
+                f"Không thể sinh lệnh: {exc}",
+            )
             return
 
+        self.call_from_thread(self._show_prepared_result, prompt, prepared)
+
+    def _show_generation_error(self, prompt: str, error: str) -> None:
+        """Restore the prompt and show a generation error."""
+        prompt_widget = self.query_one("#prompt", TextArea)
+        prompt_widget.load_text(prompt)
+        prompt_widget.disabled = False
+        prompt_widget.focus()
+        self._update_result(f"[Lỗi]: {error}")
+
+    def _show_prepared_result(self, prompt: str, prepared: PreparedCommand) -> None:
+        """Restore the prompt and show the prepared command."""
+        prompt_widget = self.query_one("#prompt", TextArea)
+        prompt_widget.load_text(prompt)
         self._show_result(prepared)
 
     def _handle_plugin(self, prompt: str) -> None:
