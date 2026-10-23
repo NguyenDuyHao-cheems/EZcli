@@ -6,7 +6,12 @@ from urllib.request import Request, urlopen
 
 from ezcli.llm.client import LLMClient
 from ezcli.llm.mock import MockLLMProvider
-from ezcli.llm.prompts import BASH_SYSTEM_PROMPT, build_bash_user_prompt
+from ezcli.llm.prompts import (
+    BASH_SYSTEM_PROMPT,
+    EXPLANATION_SYSTEM_PROMPT,
+    build_bash_user_prompt,
+    build_explanation_user_prompt,
+)
 from ezcli.llm.result import LLMResult
 
 __all__ = [
@@ -15,7 +20,9 @@ __all__ = [
     "MockLLMProvider",
     "OllamaClient",
     "BASH_SYSTEM_PROMPT",
+    "EXPLANATION_SYSTEM_PROMPT",
     "build_bash_user_prompt",
+    "build_explanation_user_prompt",
 ]
 
 
@@ -41,14 +48,47 @@ class OllamaClient:
         if not prompt.strip():
             raise ValueError("Prompt must not be empty.")
 
+        result = self._chat(
+            system_prompt=BASH_SYSTEM_PROMPT,
+            user_prompt=build_bash_user_prompt(prompt, context),
+        )
+        if not result.success:
+            return result
+
+        command = result.content.strip()
+        if "```" in command:
+            return LLMResult(
+                success=False,
+                content="",
+                error="Ollama returned Markdown instead of a Bash command.",
+            )
+
+        if "\n" in command or "\r" in command:
+            return LLMResult(
+                success=False,
+                content="",
+                error="Ollama returned more than one command line.",
+            )
+
+        return LLMResult(success=True, content=command)
+
+    def explain(self, command: str) -> LLMResult:
+        """Generate an explanation only when explicitly requested."""
+        if not command.strip():
+            raise ValueError("Command must not be empty.")
+
+        return self._chat(
+            system_prompt=EXPLANATION_SYSTEM_PROMPT,
+            user_prompt=build_explanation_user_prompt(command),
+        )
+
+    def _chat(self, *, system_prompt: str, user_prompt: str) -> LLMResult:
+        """Send one non-streaming chat request to Ollama."""
         payload = {
             "model": self._model,
             "messages": [
-                {"role": "system", "content": BASH_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": build_bash_user_prompt(prompt, context),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             "stream": False,
         }
@@ -118,29 +158,12 @@ class OllamaClient:
                 error="Ollama returned an unexpected assistant content format.",
             )
 
-        command = generated_text.strip()
-        if not command:
+        content = generated_text.strip()
+        if not content:
             return LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned empty assistant content.",
             )
 
-        if "```" in command:
-            return LLMResult(
-                success=False,
-                content="",
-                error="Ollama returned Markdown instead of a Bash command.",
-            )
-
-        if "\n" in command or "\r" in command:
-            return LLMResult(
-                success=False,
-                content="",
-                error="Ollama returned more than one command line.",
-            )
-
-        return LLMResult(
-            success=True,
-            content=command,
-        )
+        return LLMResult(success=True, content=content)

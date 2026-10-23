@@ -17,6 +17,13 @@ Rules:
   return an empty response.
 """
 
+EXPLANATION_SYSTEM_PROMPT = """\
+You explain Bash commands to a user.
+Explain the command clearly in Vietnamese.
+Describe what it does, its arguments, side effects, and possible risks.
+Do not execute or modify the command.
+"""
+
 
 def build_bash_user_prompt(
     prompt: str,
@@ -30,3 +37,8 @@ def build_bash_user_prompt(
         "User request:\n"
         f"{prompt}"
     )
+
+
+def build_explanation_user_prompt(command: str) -> str:
+    """Build the user message for explaining one Bash command."""
+    return f"Command cần giải thích:\n{command}"

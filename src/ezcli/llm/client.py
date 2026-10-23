@@ -16,3 +16,8 @@ class LLMClient(Protocol):
         """Generate a Bash command result from a prompt and shell context."""
 
         ...
+
+    def explain(self, command: str) -> LLMResult:
+        """Explain a generated Bash command."""
+
+        ...

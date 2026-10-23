@@ -54,6 +54,16 @@ class CommandService:
             safety=safety,
         )
 
+    def explain_command(self, command: str) -> str:
+        """Generate an explanation only when explicitly requested."""
+        result = self._llm_client.explain(command)
+        if not result.success:
+            raise RuntimeError(result.error)
+        explanation = result.content.strip()
+        if not explanation:
+            raise RuntimeError("Ollama returned an empty explanation.")
+        return explanation
+
     def record_outcome(
         self,
         prepared: PreparedCommand,

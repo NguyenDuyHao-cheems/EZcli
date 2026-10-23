@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from textual.widgets import Static
+from textual.widgets import Input, Static, TextArea
 
 from ezcli.application import PreparedCommand
 from ezcli.domain.models import (
@@ -42,14 +42,18 @@ def _make_prepared(
 # ---------------------------------------------------------------------------
 
 
-def test_initial_state_execute_disabled() -> None:
-    """When the TUI starts, the Execute button must be disabled."""
+def test_initial_state_shows_keyboard_actions() -> None:
+    """When the TUI starts, the keyboard action hint is visible."""
 
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            execute_btn = app.query_one("#execute")
-            assert execute_btn.disabled is True
+            actions = app.query_one("#actions", Static)
+            action_text = str(actions.content).lower()
+            assert "xecute" in action_text
+            assert "odify" in action_text
+            assert "escribe" in action_text
+            assert "bort" in action_text
 
     asyncio.run(_test())
 
@@ -60,43 +64,37 @@ def test_initial_state_result_placeholder() -> None:
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            result_widget = app.query_one("#result", Static)
+            result_widget = app.query_one("#result", TextArea)
             assert result_widget is not None
 
     asyncio.run(_test())
 
 
-def test_empty_prompt_shows_validation_message() -> None:
-    """Clicking Generate with empty input displays a validation message."""
+def test_empty_prompt_does_not_generate() -> None:
+    """Submitting an empty prompt does not create a prepared command."""
 
     async def _test() -> None:
         app = EZcliApp()
-        async with app.run_test() as pilot:
-            await pilot.click("#generate")
-            await pilot.pause()
-
-            result_text = str(app.query_one("#result", Static).content).lower()
-            assert "nhập yêu cầu" in result_text or "vui lòng" in result_text
+        async with app.run_test():
+            app.on_input_submitted(Input.Submitted(Input(), ""))
+            assert app._prepared is None
 
     asyncio.run(_test())
 
 
-def test_cancel_button_resets_prepared_and_disables_execute() -> None:
-    """Clicking Cancel resets any prepared command and disables the Execute button."""
+def test_abort_action_resets_prepared_command() -> None:
+    """Pressing Abort resets the prepared command and enables prompt input."""
 
     async def _test() -> None:
         app = EZcliApp()
-        async with app.run_test() as pilot:
-            # Simulate an already-prepared command
+        async with app.run_test():
             app._prepared = _make_prepared()
-            app.query_one("#execute").disabled = False
-
-            await pilot.click("#cancel")
-            await pilot.pause()
+            app.query_one("#prompt").disabled = True
+            app.action_abort_action()
 
             assert app._prepared is None
-            assert app.query_one("#execute").disabled is True
-            result_text = str(app.query_one("#result", Static).content)
+            assert app.query_one("#prompt").disabled is False
+            result_text = app.query_one("#result", TextArea).text
             assert "hủy" in result_text.lower()
 
     asyncio.run(_test())
@@ -107,8 +105,8 @@ def test_cancel_button_resets_prepared_and_disables_execute() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_show_result_enables_execute_for_safe_command() -> None:
-    """Displaying a safe prepared command enables the Execute button."""
+def test_show_result_disables_prompt_for_safe_command() -> None:
+    """Displaying a safe prepared command disables prompt input."""
 
     async def _test() -> None:
         app = EZcliApp()
@@ -117,15 +115,15 @@ def test_show_result_enables_execute_for_safe_command() -> None:
             app._show_result(prepared)
 
             assert app._prepared is prepared
-            assert app.query_one("#execute").disabled is False
-            result_text = str(app.query_one("#result", Static).content)
+            assert app.query_one("#prompt").disabled is True
+            result_text = app.query_one("#result", TextArea).text
             assert "ls -la" in result_text
 
     asyncio.run(_test())
 
 
-def test_show_result_disables_execute_for_blocked_command() -> None:
-    """Displaying a BLOCKED command keeps the Execute button disabled."""
+def test_show_result_displays_blocked_command() -> None:
+    """Displaying a BLOCKED command still shows the generated command."""
 
     async def _test() -> None:
         app = EZcliApp()
@@ -138,8 +136,8 @@ def test_show_result_disables_execute_for_blocked_command() -> None:
             app._show_result(prepared)
 
             assert app._prepared is prepared
-            assert app.query_one("#execute").disabled is True
-            result_text = str(app.query_one("#result", Static).content)
+            assert app.query_one("#prompt").disabled is True
+            result_text = app.query_one("#result", TextArea).text
             assert "rm -rf /" in result_text
 
     asyncio.run(_test())
@@ -157,8 +155,30 @@ def test_handle_generation_error_updates_result_area() -> None:
                 side_effect=RuntimeError("Ollama is not running"),
             ):
                 app._handle_generation("trigger error")
-            result_text = str(app.query_one("#result", Static).content).lower()
+            result_text = app.query_one("#result", TextArea).text.lower()
             assert "lỗi" in result_text or "error" in result_text
+
+    asyncio.run(_test())
+
+
+def test_describe_action_requests_explanation_in_background() -> None:
+    """Pressing D requests an explanation without blocking the TUI."""
+
+    async def _test() -> None:
+        app = EZcliApp()
+        async with app.run_test() as pilot:
+            app._prepared = _make_prepared(command="mkdir demo")
+            with patch.object(
+                app.service,
+                "explain_command",
+                return_value="Creates the demo directory.",
+            ) as explain:
+                app.action_describe_action()
+                await pilot.pause(1)
+
+            explain.assert_called_once_with("mkdir demo")
+            result_text = app.query_one("#result", TextArea).text
+            assert "Creates the demo directory." in result_text
 
     asyncio.run(_test())
 
@@ -173,7 +193,7 @@ def test_on_confirmation_cancelled_updates_message() -> None:
             app._last_prompt = ""
             app._on_confirmation(confirmed=False)
 
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "hủy thực thi" in result_text.lower()
 
     asyncio.run(_test())
@@ -230,7 +250,7 @@ def test_tui_plugin_list_displays_plugin_catalog() -> None:
         app = EZcliApp()
         async with app.run_test():
             app._handle_generation("/plugin")
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
 
             assert "QUẢN LÝ PLUGINS" in result_text
             assert "tldr" in result_text
@@ -249,7 +269,7 @@ def test_tui_plugin_install_prepares_command_when_not_installed() -> None:
             with patch("ezcli.plugins.shutil.which", return_value=None):
                 app._handle_generation("/plugin install tldr")
 
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "Chuẩn bị cài đặt" in result_text
             assert app._prepared is not None
             assert app._prepared.generated.command == "pip install tldr"
@@ -267,7 +287,7 @@ def test_tui_plugin_install_notifies_when_already_installed() -> None:
             with patch("ezcli.plugins.shutil.which", return_value="/usr/bin/tldr"):
                 app._handle_generation("/plugin install tldr")
 
-            result_text = str(app.query_one("#result", Static).content)
+            result_text = app.query_one("#result", TextArea).text
             assert "đã được cài đặt" in result_text
             assert app._prepared is None
             assert app.query_one("#execute").disabled is True
