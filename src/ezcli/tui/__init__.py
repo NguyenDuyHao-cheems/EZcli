@@ -8,6 +8,7 @@ from typing import TextIO
 
 from textual import events
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.geometry import Region
 from textual.message import Message
@@ -28,6 +29,11 @@ class LeftScrollTextArea(TextArea):
 
     async def _on_key(self, event: events.Key) -> None:
         """Submit the prompt instead of inserting a newline."""
+        if self.id == "prompt" and event.key == "q":
+            event.stop()
+            event.prevent_default()
+            self.app.exit()
+            return
         if self.id == "prompt" and event.key == "enter":
             event.stop()
             event.prevent_default()
@@ -101,6 +107,7 @@ class EZcliApp(App[None]):
     """
 
     BINDINGS = [
+        Binding("q", "quit", "Quit", priority=True, show=False),
         ("e", "execute_action", "Execute"),
         ("m", "modify_action", "Modify"),
         ("d", "describe_action", "Describe"),
