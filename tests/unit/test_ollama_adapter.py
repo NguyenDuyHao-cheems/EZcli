@@ -109,7 +109,7 @@ def test_generate_uses_custom_model_and_base_url() -> None:
 
 def test_generate_writes_prompt_and_response_to_debug_log(tmp_path: Path) -> None:
     """A successful generation records the request and response as JSON."""
-    log_path = tmp_path / "llm-debug.jsonl"
+    log_path = tmp_path / "llm-debug.json"
     logger = configure_llm_logger(log_path)
     payload = {"message": {"role": "assistant", "content": "pwd"}}
 
@@ -139,7 +139,7 @@ def test_generate_writes_prompt_and_response_to_debug_log(tmp_path: Path) -> Non
 
 def test_generate_writes_error_to_debug_log(tmp_path: Path) -> None:
     """A failed generation records the failure without changing the result."""
-    log_path = tmp_path / "llm-debug.jsonl"
+    log_path = tmp_path / "llm-debug.json"
     logger = configure_llm_logger(log_path)
 
     try:

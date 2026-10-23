@@ -17,6 +17,9 @@ class FakeLLMClient:
     ) -> LLMResult:
         return LLMResult(success=True, content="ls -la")
 
+    def explain(self, command: str) -> LLMResult:
+        return LLMResult(success=True, content="explanation")
+
 
 class MockLLMClient:
     """Provide deterministic responses for tests."""
@@ -35,6 +38,9 @@ class MockLLMClient:
 
         self.last_prompt = prompt
         self.last_context = context
+        return self._result
+
+    def explain(self, command: str) -> LLMResult:
         return self._result
 
 
