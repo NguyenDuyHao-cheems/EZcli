@@ -1,6 +1,8 @@
 """Textual terminal interface for EZcli backed by the Ollama LLM client."""
 
 import sys
+from datetime import datetime
+from pathlib import Path
 from typing import TextIO
 
 from textual.app import App, ComposeResult
@@ -9,8 +11,10 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from ezcli.application import CommandService, PreparedCommand
-from ezcli.domain.models import SafetyLevel
+from ezcli.domain.models import GeneratedCommand, HistoryEntry, SafetyLevel
 from ezcli.execution import execute_command
+from ezcli.history import HistoryStore
+from ezcli.plugins import handle_plugin_command
 from ezcli.safety import check_command
 
 
@@ -57,6 +61,7 @@ class EZcliApp(App[None]):
         self.service = CommandService()
         self._prepared: PreparedCommand | None = None
         self._last_prompt: str = ""
+        self.history_store = HistoryStore(Path(".ezcli_history.json"))
 
     def compose(self) -> ComposeResult:
         """Build the application layout."""
@@ -152,6 +157,18 @@ class EZcliApp(App[None]):
 
     def _handle_generation(self, prompt: str) -> None:
         """Generate a command through the real LLM service."""
+        cleaned_prompt = prompt.strip()
+        # Xử lý lệnh xem lịch sử
+        if cleaned_prompt == "/history":
+            history_text = handle_history_command(self.history_store)
+            self.query_one("#result", Static).update(history_text)
+            return
+
+        # Xử lý lệnh quản lý plugin
+        if cleaned_prompt == "/plugin" or cleaned_prompt.startswith("/plugin "):
+            self._handle_plugin(cleaned_prompt)
+            return
+
         self._last_prompt = prompt
         self._prepared = None
         self.query_one("#result", Static).update("Đang sinh lệnh...")
@@ -166,6 +183,31 @@ class EZcliApp(App[None]):
             return
 
         self._show_result(prepared)
+
+    def _handle_plugin(self, prompt: str) -> None:
+        """Process /plugin slash commands (list, install, remove)."""
+        parts = prompt.split()
+        args = parts[1:]
+        result = handle_plugin_command(args)
+
+        self._last_prompt = prompt
+        if result.command:
+            safety = check_command(result.command)
+            prepared = PreparedCommand(
+                generated=GeneratedCommand(prompt=prompt, command=result.command),
+                safety=safety,
+            )
+            self._prepared = prepared
+            self.query_one("#execute", Button).disabled = (
+                safety.level == SafetyLevel.BLOCKED
+            )
+            self.query_one("#result", Static).update(
+                f"{result.message}\n\nNhấn 'Thực thi' để chạy lệnh này."
+            )
+        else:
+            self._prepared = None
+            self.query_one("#execute", Button).disabled = True
+            self.query_one("#result", Static).update(result.message)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
         """Display a generated command and enable keyboard actions."""
@@ -226,6 +268,19 @@ class EZcliApp(App[None]):
             )
         except Exception:
             pass
+
+        entry = HistoryEntry(
+            prompt=self._last_prompt,
+            command=prepared.generated.command,
+            timestamp=datetime.now(),
+            safety=prepared.safety.level,
+            status=result.status,
+            exit_code=result.exit_code,
+        )
+        try:
+            self.history_store.save(entry)
+        except Exception as e:
+            print(f"Lỗi lưu lịch sử: {e}")
 
         self.query_one("#result", Static).update(
             f"Trạng thái: {result.status.value}\n"
@@ -296,6 +351,30 @@ class ModifyScreen(ModalScreen[str | None]):
             self.dismiss(self.query_one("#modified-command", Input).value)
         else:
             self.dismiss(None)
+
+
+def handle_history_command(store: HistoryStore) -> str:
+    """Đọc lịch sử từ store và định dạng thành chuỗi hiển thị lên TUI."""
+    entries = store.load()
+    if not entries:
+        return "Lịch sử thao tác trống."
+
+    lines = ["=== LỊCH SỬ THAO TÁC ==="]
+    for idx, item in enumerate(entries, start=1):
+        time_str = item.timestamp.strftime("%H:%M:%S")
+        status_val = item.status.value
+        safety_val = item.safety.value
+        lines.append(
+            f"[{idx}] {time_str} | Status: {status_val} | Safety: {safety_val}"
+        )
+
+        lines.append(f"    Prompt  : {item.prompt}")
+        lines.append(f"    Command : {item.command}")
+        if item.exit_code is not None:
+            lines.append(f"    Exit Code: {item.exit_code}")
+        lines.append("-" * 40)
+
+    return "\n".join(lines)
 
 
 def run() -> None:

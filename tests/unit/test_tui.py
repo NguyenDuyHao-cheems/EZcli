@@ -236,3 +236,60 @@ def test_confirm_screen_dismiss_false_on_back() -> None:
         screen.dismiss.assert_called_once_with(False)
 
     asyncio.run(_test())
+
+
+# ---------------------------------------------------------------------------
+# /plugin slash command TUI tests
+# ---------------------------------------------------------------------------
+
+
+def test_tui_plugin_list_displays_plugin_catalog() -> None:
+    """Submitting /plugin displays plugin catalog and keeps execute disabled."""
+
+    async def _test() -> None:
+        app = EZcliApp()
+        async with app.run_test():
+            app._handle_generation("/plugin")
+            result_text = str(app.query_one("#result", Static).content)
+
+            assert "QUẢN LÝ PLUGINS" in result_text
+            assert "tldr" in result_text
+            assert app.query_one("#execute").disabled is True
+            assert app._prepared is None
+
+    asyncio.run(_test())
+
+
+def test_tui_plugin_install_prepares_command_when_not_installed() -> None:
+    """Submitting /plugin install <name> prepares command and enables execute."""
+
+    async def _test() -> None:
+        app = EZcliApp()
+        async with app.run_test():
+            with patch("ezcli.plugins.shutil.which", return_value=None):
+                app._handle_generation("/plugin install tldr")
+
+            result_text = str(app.query_one("#result", Static).content)
+            assert "Chuẩn bị cài đặt" in result_text
+            assert app._prepared is not None
+            assert app._prepared.generated.command == "pip install tldr"
+            assert app.query_one("#execute").disabled is False
+
+    asyncio.run(_test())
+
+
+def test_tui_plugin_install_notifies_when_already_installed() -> None:
+    """Submitting /plugin install <name> notifies user when already installed."""
+
+    async def _test() -> None:
+        app = EZcliApp()
+        async with app.run_test():
+            with patch("ezcli.plugins.shutil.which", return_value="/usr/bin/tldr"):
+                app._handle_generation("/plugin install tldr")
+
+            result_text = str(app.query_one("#result", Static).content)
+            assert "đã được cài đặt" in result_text
+            assert app._prepared is None
+            assert app.query_one("#execute").disabled is True
+
+    asyncio.run(_test())
