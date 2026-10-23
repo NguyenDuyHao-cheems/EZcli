@@ -8,7 +8,7 @@ config before relying on anything here.
 - Python 3.12+, managed by **uv**. Build backend: `uv_build`.
 - TUI: **Textual**; CLI: **Typer** (`ezcli = "ezcli.cli:app"`).
 - Local LLM via **Ollama** (default `qwen2.5-coder:3b` at `http://localhost:11434`).
-- Tests: **pytest**; lint/format: **Ruff**; types: **mypy strict**; Markdown: **rumdl**; docs: **MkDocs**.
+- Tests: **pytest**; lint/format: **Ruff**; types: **mypy strict**;
 
 ## Commands
 
@@ -66,9 +66,6 @@ Safety is checked twice: once at generation (application) and again at execution
 
 - **All tests run offline** — no real Ollama required. Unit tests patch
   `ezcli.llm.urlopen`.
-- `tests/test_markdown_links.py` scans every `*.md` under root, `docs/`, and
-  `.github/` and fails on broken links/anchors. Adding or renaming docs can
-  break the suite even when no code changed.
 - Pre-commit hooks auto-fix and **abort the commit** when they rewrite files.
   Re-stage (`git add -u`) and commit again. Install once with
   `uv run pre-commit install`.
@@ -86,3 +83,7 @@ Safety is checked twice: once at generation (application) and again at execution
 ## TUI
 
 - Prefer `no mouse` design. Prior using only keyboard when working with TUI
+
+## rule by Hao
+
+- cập nhật docs khi sửa phần liên quan.
