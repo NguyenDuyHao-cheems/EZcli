@@ -63,7 +63,7 @@ class EZcliApp(App[None]):
             yield Static(
                 "Lệnh được sinh ra sẽ hiển thị tại đây.",
                 id="result",
-                markup=False,
+                markup=True,
             )
             with Horizontal(id="actions"):
                 yield Button("Sinh lệnh", id="generate", variant="primary")
@@ -165,8 +165,20 @@ class EZcliApp(App[None]):
         self.query_one("#execute", Button).disabled = (
             prepared.safety.level == SafetyLevel.BLOCKED
         )
+        current_dir = Path.cwd()
+        safety_level = prepared.safety.level
+        if safety_level == SafetyLevel.SAFE:
+            color = "green"
+        elif safety_level == SafetyLevel.WARNING:
+            color = "yellow"
+        else:  # BLOCKED
+            color = "red"
 
-        self.query_one("#result", Static).update(f"{prepared.generated.command}")
+        result_text = (
+            f"Câu lệnh Bash:\n[{color}]{prepared.generated.command}[/{color}]\n\n"
+            f"[dim] Thư mục hiện tại:\n {current_dir}[/dim]"
+        )
+        self.query_one("#result", Static).update(result_text)
 
     def _on_confirmation(self, confirmed: bool | None) -> None:
         """Handle execution confirmation or return back to generation view."""
