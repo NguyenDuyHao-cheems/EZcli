@@ -1,5 +1,4 @@
 import sys
-from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import TextIO
@@ -8,10 +7,8 @@ from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.geometry import Region
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widget import Widget
 from textual.widgets import Button, Input, Static, TextArea
 
 from ezcli.application import CommandService, PreparedCommand
@@ -39,22 +36,23 @@ class LeftScrollTextArea(TextArea):
             return
         await super()._on_key(event)
 
-    def _arrange_scrollbars(self, region: Region) -> Iterable[tuple[Widget, Region]]:
-        if self.show_horizontal_scrollbar:
-            yield from super()._arrange_scrollbars(region)
-            return
 
-        if self.show_vertical_scrollbar and self.scrollbar_size_vertical:
-            window_region, scrollbar_region = region.split_vertical(
-                self.scrollbar_size_vertical
-            )
-            scrollbar = self.vertical_scrollbar
-            scrollbar.window_virtual_size = self.virtual_size.height
-            scrollbar.window_size = window_region.height
-            yield scrollbar, scrollbar_region
-            return
+class PromptTextArea(TextArea):
+    """Text area for prompt input (scrollbar defaults to the right)."""
 
-        yield from super()._arrange_scrollbars(region)
+    async def _on_key(self, event: events.Key) -> None:
+        """Submit the prompt instead of inserting a newline."""
+        if self.id == "prompt" and event.key == "q":
+            event.stop()
+            event.prevent_default()
+            self.app.exit()
+            return
+        if self.id == "prompt" and event.key == "enter":
+            event.stop()
+            event.prevent_default()
+            self.post_message(PromptSubmitted(self.text))
+            return
+        await super()._on_key(event)
 
 
 class PromptSubmitted(Message):
@@ -83,6 +81,7 @@ class EZcliApp(App[None]):
         min-height: 2;
         margin: 0 0 1 0;
         padding: 0 1;
+
     }
 
     #result-scroll {
@@ -123,7 +122,8 @@ class EZcliApp(App[None]):
         """Build the application layout."""
         with Vertical():
             yield Static("> Nhập yêu cầu để sinh lệnh Bash.\n")
-            yield LeftScrollTextArea(
+            # SỬ DỤNG CLASS MỚI ĐÃ ĐỔI TÊN Ở ĐÂY
+            yield PromptTextArea(
                 placeholder="Ví dụ: liệt kê các file trong thư mục hiện tại",
                 id="prompt",
             )
@@ -135,11 +135,9 @@ class EZcliApp(App[None]):
                 )
 
             yield Static(
-
                 "[E]xecute, [M]odify, [D]escribe, [A]bort",
                 id="actions",
                 markup=False,
-
             )
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
