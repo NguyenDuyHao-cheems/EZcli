@@ -1,5 +1,4 @@
 import sys
-from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import TextIO
@@ -8,14 +7,13 @@ from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.geometry import Region
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widget import Widget
 from textual.widgets import Button, Input, OptionList, Static, TextArea
 from textual.widgets.option_list import Option
 
 from ezcli.application import CommandService, PreparedCommand
+from ezcli.context import format_shell_path
 from ezcli.domain.models import GeneratedCommand, HistoryEntry, SafetyLevel
 from ezcli.execution import execute_command
 from ezcli.history import HistoryStore
@@ -91,22 +89,44 @@ class LeftScrollTextArea(TextArea):
 
         await super()._on_key(event)
 
-    def _arrange_scrollbars(self, region: Region) -> Iterable[tuple[Widget, Region]]:
-        if self.show_horizontal_scrollbar:
-            yield from super()._arrange_scrollbars(region)
-            return
 
-        if self.show_vertical_scrollbar and self.scrollbar_size_vertical:
-            window_region, scrollbar_region = region.split_vertical(
-                self.scrollbar_size_vertical
-            )
-            scrollbar = self.vertical_scrollbar
-            scrollbar.window_virtual_size = self.virtual_size.height
-            scrollbar.window_size = window_region.height
-            yield scrollbar, scrollbar_region
-            return
+class PromptTextArea(TextArea):
+    """Text area for prompt input (scrollbar defaults to the right)."""
 
-        yield from super()._arrange_scrollbars(region)
+    async def _on_key(self, event: events.Key) -> None:
+        """Submit the prompt instead of inserting a newline."""
+        if self.id == "prompt":
+            command_list = self.app.query_one("#command-list", CommandOptionList)
+
+            if event.key == "down" and command_list.display:
+                event.stop()
+                event.prevent_default()
+                command_list.focus()
+                return
+
+            if event.key == "q":
+                event.stop()
+                event.prevent_default()
+                self.app.exit()
+                return
+
+            if event.key == "enter":
+                event.stop()
+                event.prevent_default()
+
+                if command_list.display:
+                    if command_list.highlighted is not None:
+                        option = command_list.get_option_at_index(
+                            command_list.highlighted
+                        )
+                        if option and option.id:
+                            self.app.post_message(CommandSelected(str(option.id)))
+                    return
+
+                self.post_message(PromptSubmitted(self.text))
+                return
+
+        await super()._on_key(event)
 
 
 class PromptSubmitted(Message):
@@ -135,6 +155,7 @@ class EZcliApp(App[None]):
         min-height: 2;
         margin: 0 0 1 0;
         padding: 0 1;
+
     }
 
     #command-list {
@@ -186,8 +207,10 @@ class EZcliApp(App[None]):
         ]
 
         with Vertical():
-            yield Static("> Nhập yêu cầu để sinh lệnh Bash.\n")
-            yield LeftScrollTextArea(
+            shell_dir = format_shell_path()
+            yield Static(f"> {shell_dir} ❯ Nhập yêu cầu để sinh lệnh Bash.\n")
+            # SỬ DỤNG CLASS MỚI ĐÃ ĐỔI TÊN Ở ĐÂY
+            yield PromptTextArea(
                 placeholder="Ví dụ: liệt kê các file trong thư mục hiện tại",
                 id="prompt",
             )
@@ -378,15 +401,11 @@ class EZcliApp(App[None]):
                 safety=safety,
             )
             self._prepared = prepared
-            self.query_one("#execute", Button).disabled = (
-                safety.level == SafetyLevel.BLOCKED
-            )
-            self._update_result(
-                f"{result.message}\n\nNhấn 'Thực thi' để chạy lệnh này."
-            )
+            self.query_one("#prompt", TextArea).disabled = True
+            self._update_result(f"{result.message}\n\nNhấn 'e' để thực thi lệnh này.")
         else:
             self._prepared = None
-            self.query_one("#execute", Button).disabled = True
+            self.query_one("#prompt", TextArea).disabled = False
             self._update_result(result.message)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
@@ -394,6 +413,7 @@ class EZcliApp(App[None]):
         self._prepared = prepared
 
         self.query_one("#prompt", TextArea).disabled = True
+
         safety_level = prepared.safety.level
         if safety_level == SafetyLevel.SAFE:
             color = "green"
@@ -401,7 +421,10 @@ class EZcliApp(App[None]):
             color = "yellow"
         else:  # BLOCKED
             color = "red"
-        result_text = f"[{color}]{prepared.generated.command}[/{color}]\n\n"
+
+        result_text = (
+            f"Câu lệnh Bash:\n[{color}]{prepared.generated.command}[/{color}]\n\n"
+        )
         self._update_result(result_text)
 
     def _on_modified(self, command: str | None) -> None:
@@ -471,11 +494,16 @@ class EZcliApp(App[None]):
         except Exception as e:
             print(f"Lỗi lưu lịch sử: {e}")
 
+        output = result.stdout or ""
+        if result.stderr:
+            output = f"{output}\n{result.stderr}".strip()
+
+        output_text = f"\n\n{output}" if output.strip() else ""
+
         self._update_result(
             f"Trạng thái: {result.status.value}\n"
-            f"Mã thoát: {result.exit_code}\n\n"
-            f"STDOUT:\n{result.stdout or ''}\n\n"
-            f"STDERR:\n{result.stderr or ''}"
+            f"Mã thoát: {result.exit_code}"
+            f"{output_text}"
         )
 
 

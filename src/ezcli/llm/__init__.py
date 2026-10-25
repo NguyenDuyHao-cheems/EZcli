@@ -1,10 +1,13 @@
 """Client for generating Bash commands through a local Ollama instance."""
 
 import json
+import time
+from datetime import datetime
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from ezcli.llm.client import LLMClient
+from ezcli.llm.debug_logging import configure_llm_logger
 from ezcli.llm.mock import MockLLMProvider
 from ezcli.llm.prompts import (
     BASH_SYSTEM_PROMPT,
@@ -38,6 +41,7 @@ class OllamaClient:
         self._model = model
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        self._logger = configure_llm_logger()
 
     def generate(
         self,
@@ -49,6 +53,7 @@ class OllamaClient:
             raise ValueError("Prompt must not be empty.")
 
         result = self._chat(
+            operation="generate",
             system_prompt=BASH_SYSTEM_PROMPT,
             user_prompt=build_bash_user_prompt(prompt, context),
         )
@@ -78,12 +83,20 @@ class OllamaClient:
             raise ValueError("Command must not be empty.")
 
         return self._chat(
+            operation="explain",
             system_prompt=EXPLANATION_SYSTEM_PROMPT,
             user_prompt=build_explanation_user_prompt(command),
         )
 
-    def _chat(self, *, system_prompt: str, user_prompt: str) -> LLMResult:
+    def _chat(
+        self,
+        *,
+        operation: str,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> LLMResult:
         """Send one non-streaming chat request to Ollama."""
+        started_at = time.perf_counter()
         payload = {
             "model": self._model,
             "messages": [
@@ -103,67 +116,109 @@ class OllamaClient:
             with urlopen(request, timeout=self._timeout) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error=f"Ollama returned HTTP error {exc.code}.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
         except TimeoutError:
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error=f"Ollama request timed out after {self._timeout:g} seconds.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
         except (URLError, OSError):
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error="Could not connect to Ollama. Check that Ollama is running.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
         except (json.JSONDecodeError, UnicodeDecodeError):
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned an invalid response.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
 
         if not isinstance(data, dict):
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned an unexpected response format.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
 
         provider_error = data.get("error")
         if isinstance(provider_error, str) and provider_error.strip():
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error=f"Ollama returned an error: {provider_error.strip()}",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
 
         message = data.get("message")
         if not isinstance(message, dict):
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned an unexpected response format.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
 
         generated_text = message.get("content")
         if not isinstance(generated_text, str):
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned an unexpected assistant content format.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
 
         content = generated_text.strip()
         if not content:
-            return LLMResult(
+            result = LLMResult(
                 success=False,
                 content="",
                 error="Ollama returned empty assistant content.",
             )
+            self._log_result(operation, system_prompt, user_prompt, result, started_at)
+            return result
 
-        return LLMResult(success=True, content=content)
+        result = LLMResult(success=True, content=content)
+        self._log_result(operation, system_prompt, user_prompt, result, started_at)
+        return result
+
+    def _log_result(
+        self,
+        operation: str,
+        system_prompt: str,
+        user_prompt: str,
+        result: LLMResult,
+        started_at: float,
+    ) -> None:
+        """Write one structured debug record without affecting the LLM result."""
+        record = {
+            "timestamp": datetime.now().astimezone().isoformat(),
+            "operation": operation,
+            "model": self._model,
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "success": result.success,
+            "response": result.content if result.success else None,
+            "error": result.error,
+            "latency_ms": round((time.perf_counter() - started_at) * 1000, 2),
+        }
+        self._logger.debug(json.dumps(record, ensure_ascii=False, indent=2))

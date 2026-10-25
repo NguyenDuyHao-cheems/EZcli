@@ -8,6 +8,7 @@ picks up the mock without touching any network socket.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError, URLError
@@ -15,6 +16,7 @@ from urllib.error import HTTPError, URLError
 import pytest
 
 from ezcli.llm import LLMResult, OllamaClient
+from ezcli.llm.debug_logging import configure_llm_logger
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -103,6 +105,59 @@ def test_generate_uses_custom_model_and_base_url() -> None:
     assert "192.168.1.50:11434/api/chat" in request_obj.full_url
     body = json.loads(request_obj.data.decode("utf-8"))
     assert body["model"] == "llama3:8b"
+
+
+def test_generate_writes_prompt_and_response_to_debug_log(tmp_path: Path) -> None:
+    """A successful generation records the request and response as JSON."""
+    log_path = tmp_path / "llm-debug.json"
+    logger = configure_llm_logger(log_path)
+    payload = {"message": {"role": "assistant", "content": "pwd"}}
+
+    try:
+        with (
+            patch("ezcli.llm.configure_llm_logger", return_value=logger),
+            patch(_PATCH_TARGET, return_value=_make_response(payload)),
+        ):
+            result = OllamaClient(model="test-model").generate(
+                "show current directory",
+                context={"shell": "bash"},
+            )
+
+        assert result == LLMResult(success=True, content="pwd")
+        record = json.loads(log_path.read_text(encoding="utf-8"))
+        assert record["operation"] == "generate"
+        assert record["model"] == "test-model"
+        assert "show current directory" in record["user_prompt"]
+        assert record["response"] == "pwd"
+        assert record["error"] is None
+        assert record["latency_ms"] >= 0
+    finally:
+        for handler in logger.handlers:
+            handler.close()
+        logger.handlers.clear()
+
+
+def test_generate_writes_error_to_debug_log(tmp_path: Path) -> None:
+    """A failed generation records the failure without changing the result."""
+    log_path = tmp_path / "llm-debug.json"
+    logger = configure_llm_logger(log_path)
+
+    try:
+        with (
+            patch("ezcli.llm.configure_llm_logger", return_value=logger),
+            patch(_PATCH_TARGET, side_effect=URLError("connection failed")),
+        ):
+            result = OllamaClient().generate("list files")
+
+        assert result.success is False
+        record = json.loads(log_path.read_text(encoding="utf-8"))
+        assert record["operation"] == "generate"
+        assert record["response"] is None
+        assert "Could not connect to Ollama" in record["error"]
+    finally:
+        for handler in logger.handlers:
+            handler.close()
+        logger.handlers.clear()
 
 
 # ---------------------------------------------------------------------------

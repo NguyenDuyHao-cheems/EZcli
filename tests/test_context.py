@@ -6,6 +6,7 @@ import pytest
 
 from ezcli.context import (
     collect_context,
+    format_shell_path,
     get_current_directory,
     get_current_shell,
     get_operating_system,
@@ -108,3 +109,20 @@ def test_environment_context_immutability_and_dict() -> None:
     assert as_dict["current_directory"] == ctx.current_directory
     assert as_dict["shell"] == ctx.shell
     assert as_dict["operating_system"] == ctx.operating_system
+
+
+def test_format_shell_path_home() -> None:
+    home = Path.home()
+    assert format_shell_path(home) == "~"
+
+
+def test_format_shell_path_inside_home() -> None:
+    home = Path.home()
+    sub_path = home / "projects" / "test_app"
+    assert format_shell_path(sub_path) == "~/projects/test_app"
+
+
+def test_format_shell_path_non_home() -> None:
+    test_path = Path("/var/log/system")
+    formatted = format_shell_path(test_path)
+    assert "\\" not in formatted
