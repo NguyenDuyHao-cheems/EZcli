@@ -12,7 +12,8 @@ from textual.geometry import Region
 from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widget import Widget
-from textual.widgets import Button, Input, Static, TextArea
+from textual.widgets import Button, Input, OptionList, Static, TextArea
+from textual.widgets.option_list import Option
 
 from ezcli.application import CommandService, PreparedCommand
 from ezcli.domain.models import GeneratedCommand, HistoryEntry, SafetyLevel
@@ -20,6 +21,36 @@ from ezcli.execution import execute_command
 from ezcli.history import HistoryStore
 from ezcli.plugins import handle_plugin_command
 from ezcli.safety import check_command
+from ezcli.tui.commands import SLASH_COMMANDS
+
+
+class CommandOptionList(OptionList):
+    """OptionList chuyên dụng cho slash commands, tự động điền lệnh khi nhấn Enter."""
+
+    async def _on_key(self, event: events.Key) -> None:
+        if event.key == "enter":
+            event.stop()
+            event.prevent_default()
+            if self.highlighted is not None:
+                option = self.get_option_at_index(self.highlighted)
+                if option and option.id:
+                    self.app.post_message(CommandSelected(str(option.id)))
+            return
+        elif event.key == "escape":
+            event.stop()
+            event.prevent_default()
+            self.display = False
+            self.app.query_one("#prompt", TextArea).focus()
+            return
+        await super()._on_key(event)
+
+
+class CommandSelected(Message):
+    """Message tự định nghĩa khi người dùng chọn một lệnh từ OptionList."""
+
+    def __init__(self, command: str) -> None:
+        super().__init__()
+        self.command = command
 
 
 class LeftScrollTextArea(TextArea):
@@ -27,16 +58,37 @@ class LeftScrollTextArea(TextArea):
 
     async def _on_key(self, event: events.Key) -> None:
         """Submit the prompt instead of inserting a newline."""
+
+        if self.id == "prompt" and event.key == "down":
+            command_list = self.app.query_one("#command-list", CommandOptionList)
+            if command_list.display:
+                event.stop()
+                event.prevent_default()
+                command_list.focus()
+                return
+
         if self.id == "prompt" and event.key == "q":
             event.stop()
             event.prevent_default()
             self.app.exit()
             return
+
         if self.id == "prompt" and event.key == "enter":
             event.stop()
             event.prevent_default()
+
+            command_list = self.app.query_one("#command-list", CommandOptionList)
+
+            if command_list.display:
+                if command_list.highlighted is not None:
+                    option = command_list.get_option_at_index(command_list.highlighted)
+                    if option and option.id:
+                        self.app.post_message(CommandSelected(str(option.id)))
+                return
+
             self.post_message(PromptSubmitted(self.text))
             return
+
         await super()._on_key(event)
 
     def _arrange_scrollbars(self, region: Region) -> Iterable[tuple[Widget, Region]]:
@@ -85,6 +137,13 @@ class EZcliApp(App[None]):
         padding: 0 1;
     }
 
+    #command-list {
+        height: auto;
+        max-height: 5;
+        margin-bottom: 1;
+        display: none;
+    }
+
     #result-scroll {
         height: 1fr;
         border: round $primary;
@@ -118,29 +177,60 @@ class EZcliApp(App[None]):
         self._prepared: PreparedCommand | None = None
         self._last_prompt: str = ""
         self.history_store = HistoryStore(Path(".ezcli_history.json"))
+        self._is_selecting_command = False
 
     def compose(self) -> ComposeResult:
         """Build the application layout."""
+        options = [
+            Option(f"{cmd} - {desc}", id=cmd) for cmd, desc in SLASH_COMMANDS.items()
+        ]
+
         with Vertical():
             yield Static("> Nhập yêu cầu để sinh lệnh Bash.\n")
             yield LeftScrollTextArea(
                 placeholder="Ví dụ: liệt kê các file trong thư mục hiện tại",
                 id="prompt",
             )
+            yield CommandOptionList(*options, id="command-list")
             with VerticalScroll(id="result-scroll"):
                 yield Static(
                     "Lệnh được sinh ra sẽ hiển thị tại đây.",
                     id="result",
-                    markup=False,
+                    markup=True,
                 )
 
             yield Static(
-
                 "[E]xecute, [M]odify, [D]escribe, [A]bort",
                 id="actions",
                 markup=False,
-
             )
+
+    def on_text_area_changed(self, event: TextArea.Changed) -> None:
+        if self._is_selecting_command:
+            return
+
+        if event.text_area.id != "prompt":
+            return
+
+        text = event.text_area.text.strip()
+        command_list = self.query_one("#command-list", CommandOptionList)
+
+        if text == "/":
+            command_list.display = True
+        elif not text.startswith("/"):
+            command_list.display = False
+
+    def on_command_selected(self, message: CommandSelected) -> None:
+        """Điền lệnh được chọn, ẩn menu và trả focus về prompt."""
+        command_list = self.query_one("#command-list", CommandOptionList)
+        prompt_widget = self.query_one("#prompt", TextArea)
+        command_list.display = False
+
+        self._is_selecting_command = True
+        prompt_widget.load_text(message.command)
+        prompt_widget.focus()
+
+        self.call_after_refresh(setattr, self, "_is_selecting_command", False)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Generate a command when Enter is pressed in the prompt."""
@@ -304,7 +394,15 @@ class EZcliApp(App[None]):
         self._prepared = prepared
 
         self.query_one("#prompt", TextArea).disabled = True
-        self._update_result(prepared.generated.command)
+        safety_level = prepared.safety.level
+        if safety_level == SafetyLevel.SAFE:
+            color = "green"
+        elif safety_level == SafetyLevel.WARNING:
+            color = "yellow"
+        else:  # BLOCKED
+            color = "red"
+        result_text = f"[{color}]{prepared.generated.command}[/{color}]\n\n"
+        self._update_result(result_text)
 
     def _on_modified(self, command: str | None) -> None:
         """Apply an edited command and recalculate its safety level."""
