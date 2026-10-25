@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static, TextArea
 
 from ezcli.application import CommandService, PreparedCommand
+from ezcli.context import format_shell_path
 from ezcli.domain.models import GeneratedCommand, HistoryEntry, SafetyLevel
 from ezcli.execution import execute_command
 from ezcli.history import HistoryStore
@@ -121,7 +122,8 @@ class EZcliApp(App[None]):
     def compose(self) -> ComposeResult:
         """Build the application layout."""
         with Vertical():
-            yield Static("> Nhập yêu cầu để sinh lệnh Bash.\n")
+            shell_dir = format_shell_path()
+            yield Static(f"> {shell_dir} ❯ Nhập yêu cầu để sinh lệnh Bash.\n")
             # SỬ DỤNG CLASS MỚI ĐÃ ĐỔI TÊN Ở ĐÂY
             yield PromptTextArea(
                 placeholder="Ví dụ: liệt kê các file trong thư mục hiện tại",
@@ -131,7 +133,7 @@ class EZcliApp(App[None]):
                 yield Static(
                     "Lệnh được sinh ra sẽ hiển thị tại đây.",
                     id="result",
-                    markup=False,
+                    markup=True,
                 )
 
             yield Static(
@@ -286,15 +288,11 @@ class EZcliApp(App[None]):
                 safety=safety,
             )
             self._prepared = prepared
-            self.query_one("#execute", Button).disabled = (
-                safety.level == SafetyLevel.BLOCKED
-            )
-            self._update_result(
-                f"{result.message}\n\nNhấn 'Thực thi' để chạy lệnh này."
-            )
+            self.query_one("#prompt", TextArea).disabled = True
+            self._update_result(f"{result.message}\n\nNhấn 'e' để thực thi lệnh này.")
         else:
             self._prepared = None
-            self.query_one("#execute", Button).disabled = True
+            self.query_one("#prompt", TextArea).disabled = False
             self._update_result(result.message)
 
     def _show_result(self, prepared: PreparedCommand) -> None:
@@ -302,7 +300,21 @@ class EZcliApp(App[None]):
         self._prepared = prepared
 
         self.query_one("#prompt", TextArea).disabled = True
-        self._update_result(prepared.generated.command)
+
+        current_dir = format_shell_path()
+        safety_level = prepared.safety.level
+        if safety_level == SafetyLevel.SAFE:
+            color = "green"
+        elif safety_level == SafetyLevel.WARNING:
+            color = "yellow"
+        else:  # BLOCKED
+            color = "red"
+
+        result_text = (
+            f"Câu lệnh Bash:\n[{color}]{prepared.generated.command}[/{color}]\n\n"
+            f"[dim]Thư mục hiện tại: {current_dir} ❯[/dim]"
+        )
+        self._update_result(result_text)
 
     def _on_modified(self, command: str | None) -> None:
         """Apply an edited command and recalculate its safety level."""
@@ -371,11 +383,16 @@ class EZcliApp(App[None]):
         except Exception as e:
             print(f"Lỗi lưu lịch sử: {e}")
 
+        output = result.stdout or ""
+        if result.stderr:
+            output = f"{output}\n{result.stderr}".strip()
+
+        output_text = f"\n\n{output}" if output.strip() else ""
+
         self._update_result(
             f"Trạng thái: {result.status.value}\n"
-            f"Mã thoát: {result.exit_code}\n\n"
-            f"STDOUT:\n{result.stdout or ''}\n\n"
-            f"STDERR:\n{result.stderr or ''}"
+            f"Mã thoát: {result.exit_code}"
+            f"{output_text}"
         )
 
 

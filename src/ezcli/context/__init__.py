@@ -10,6 +10,7 @@ from pathlib import Path
 __all__ = [
     "EnvironmentContext",
     "collect_context",
+    "format_shell_path",
     "get_current_directory",
     "get_current_shell",
     "get_environment_context",
@@ -46,6 +47,34 @@ def get_current_directory() -> Path:
             return Path.home()
         except (OSError, RuntimeError):
             return Path(".")
+
+
+def format_shell_path(directory: Path | str | None = None) -> str:
+    """Format a directory path in zsh/fish shell style (e.g. ~/projects/EZcli).
+
+    Replaces the user's home directory with '~' and normalizes directory separators
+    to forward slashes as used in modern shell prompts.
+    """
+    if directory is None:
+        target = get_current_directory()
+    elif isinstance(directory, str):
+        target = Path(directory)
+    else:
+        target = directory
+
+    try:
+        home = Path.home()
+        target_resolved = target.resolve()
+        home_resolved = home.resolve()
+        if target_resolved == home_resolved:
+            return "~"
+        if target_resolved.is_relative_to(home_resolved):
+            rel = target_resolved.relative_to(home_resolved).as_posix()
+            return f"~/{rel}"
+    except (ValueError, RuntimeError, OSError):
+        pass
+
+    return str(target).replace("\\", "/")
 
 
 def get_current_shell() -> str:

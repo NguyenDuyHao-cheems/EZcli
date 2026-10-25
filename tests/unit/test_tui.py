@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from textual.widgets import Input, Static, TextArea
+from textual.widgets import Input, Static
 
 from ezcli.application import PreparedCommand
 from ezcli.domain.models import (
@@ -64,7 +64,7 @@ def test_initial_state_result_placeholder() -> None:
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
-            result_widget = app.query_one("#result", TextArea)
+            result_widget = app.query_one("#result", Static)
             assert result_widget is not None
 
     asyncio.run(_test())
@@ -94,7 +94,7 @@ def test_abort_action_resets_prepared_command() -> None:
 
             assert app._prepared is None
             assert app.query_one("#prompt").disabled is False
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "hủy" in result_text.lower()
 
     asyncio.run(_test())
@@ -116,7 +116,7 @@ def test_show_result_disables_prompt_for_safe_command() -> None:
 
             assert app._prepared is prepared
             assert app.query_one("#prompt").disabled is True
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "ls -la" in result_text
 
     asyncio.run(_test())
@@ -137,8 +137,24 @@ def test_show_result_displays_blocked_command() -> None:
 
             assert app._prepared is prepared
             assert app.query_one("#prompt").disabled is True
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "rm -rf /" in result_text
+
+    asyncio.run(_test())
+
+
+def test_show_result_displays_shell_style_directory() -> None:
+    """_show_result displays current directory in shell zsh/fish style with ❯."""
+
+    async def _test() -> None:
+        app = EZcliApp()
+        async with app.run_test():
+            prepared = _make_prepared(command="ls -la", level=SafetyLevel.SAFE)
+            app._show_result(prepared)
+
+            result_text = str(app.query_one("#result", Static).content)
+            assert "Thư mục hiện tại:" in result_text
+            assert "❯" in result_text
 
     asyncio.run(_test())
 
@@ -148,14 +164,16 @@ def test_handle_generation_error_updates_result_area() -> None:
 
     async def _test() -> None:
         app = EZcliApp()
-        async with app.run_test():
+        async with app.run_test() as pilot:
             with patch.object(
                 app.service,
                 "prepare_command",
                 side_effect=RuntimeError("Ollama is not running"),
             ):
                 app._handle_generation("trigger error")
-            result_text = app.query_one("#result", TextArea).text.lower()
+                await pilot.pause(0.5)
+
+            result_text = str(app.query_one("#result", Static).content).lower()
             assert "lỗi" in result_text or "error" in result_text
 
     asyncio.run(_test())
@@ -177,7 +195,7 @@ def test_describe_action_requests_explanation_in_background() -> None:
                 await pilot.pause(1)
 
             explain.assert_called_once_with("mkdir demo")
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "Creates the demo directory." in result_text
 
     asyncio.run(_test())
@@ -193,8 +211,34 @@ def test_on_confirmation_cancelled_updates_message() -> None:
             app._last_prompt = ""
             app._on_confirmation(confirmed=False)
 
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "hủy thực thi" in result_text.lower()
+
+    asyncio.run(_test())
+
+
+def test_on_confirmation_output_has_no_stdout_stderr_prefixes() -> None:
+    """When a command is executed, output does not have STDOUT/STDERR labels."""
+
+    async def _test() -> None:
+        app = EZcliApp()
+        async with app.run_test():
+            app._prepared = _make_prepared(command="echo hello", level=SafetyLevel.SAFE)
+            app._last_prompt = "say hello"
+            mock_result = MagicMock()
+            mock_result.status = MagicMock(value="success")
+            mock_result.exit_code = 0
+            mock_result.stdout = "hello\n"
+            mock_result.stderr = ""
+
+            with patch("ezcli.tui.execute_command", return_value=mock_result):
+                app._on_confirmation(confirmed=True)
+
+            result_text = str(app.query_one("#result", Static).content)
+            assert "STDOUT:" not in result_text
+            assert "STDERR:" not in result_text
+            assert "Trạng thái: success" in result_text
+            assert "hello" in result_text
 
     asyncio.run(_test())
 
@@ -244,24 +288,24 @@ def test_confirm_screen_dismiss_false_on_back() -> None:
 
 
 def test_tui_plugin_list_displays_plugin_catalog() -> None:
-    """Submitting /plugin displays plugin catalog and keeps execute disabled."""
+    """Submitting /plugin displays plugin catalog and keeps prompt enabled."""
 
     async def _test() -> None:
         app = EZcliApp()
         async with app.run_test():
             app._handle_generation("/plugin")
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
 
             assert "QUẢN LÝ PLUGINS" in result_text
             assert "tldr" in result_text
-            assert app.query_one("#execute").disabled is True
+            assert app.query_one("#prompt").disabled is False
             assert app._prepared is None
 
     asyncio.run(_test())
 
 
 def test_tui_plugin_install_prepares_command_when_not_installed() -> None:
-    """Submitting /plugin install <name> prepares command and enables execute."""
+    """Submitting /plugin install <name> prepares command and disables prompt."""
 
     async def _test() -> None:
         app = EZcliApp()
@@ -269,11 +313,11 @@ def test_tui_plugin_install_prepares_command_when_not_installed() -> None:
             with patch("ezcli.plugins.shutil.which", return_value=None):
                 app._handle_generation("/plugin install tldr")
 
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "Chuẩn bị cài đặt" in result_text
             assert app._prepared is not None
             assert app._prepared.generated.command == "pip install tldr"
-            assert app.query_one("#execute").disabled is False
+            assert app.query_one("#prompt").disabled is True
 
     asyncio.run(_test())
 
@@ -287,9 +331,9 @@ def test_tui_plugin_install_notifies_when_already_installed() -> None:
             with patch("ezcli.plugins.shutil.which", return_value="/usr/bin/tldr"):
                 app._handle_generation("/plugin install tldr")
 
-            result_text = app.query_one("#result", TextArea).text
+            result_text = str(app.query_one("#result", Static).content)
             assert "đã được cài đặt" in result_text
             assert app._prepared is None
-            assert app.query_one("#execute").disabled is True
+            assert app.query_one("#prompt").disabled is False
 
     asyncio.run(_test())
